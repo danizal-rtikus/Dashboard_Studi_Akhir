@@ -304,13 +304,13 @@ function renderDosenStatsCards(dosenName) {
 
     const statOrder = [
         { label: "Total Dibimbing", key: "total", icon: "fas fa-users" },
-        { label: "Sudah Proposal", key: "Sudah Proposal", icon: "fas fa-check-circle" },
-        { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-clipboard-check" },
-        { label: "Pendadaran", key: "Pendadaran", icon: "fas fa-graduation-cap" },
-        { label: "Sudah Yudisium", key: "Sudah Yudisium", icon: "fas fa-award" },
         { label: "Belum Proposal", key: "Belum Proposal", icon: "fas fa-times-circle" },
-        { label: "Belum Ujian Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-exclamation-circle" },
-        { label: "Sudah Ujian Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-trophy" }
+        { label: "Belum Ujian Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-times-circle" },
+        { label: "Sudah Proposal", key: "Sudah Proposal", icon: "fas fa-users" },
+        { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-users" },
+        { label: "Pendadaran", key: "Pendadaran", icon: "fas fa-users" },
+        { label: "Sudah Ujian Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-users" },
+        { label: "Sudah Yudisium", key: "Sudah Yudisium", icon: "fas fa-award" }
     ];
 
     statOrder.forEach(stat => {
