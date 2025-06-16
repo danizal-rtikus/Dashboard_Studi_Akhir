@@ -6,6 +6,7 @@ const appsScriptUrl = 'https://script.google.com/macros/s/AKfycbwLjQRxoemkHfjtcJ
 
 let originalData = []; // Variabel global untuk menyimpan data asli dari API
 let uniqueDosenNames = []; // Menyimpan daftar nama dosen unik
+let dosenStats = {}; // Menyimpan statistik detail untuk setiap dosen
 let currentPage = 1;
 const rowsPerPage = 10;
 const fullTableRowsPerPage = 15;
@@ -29,7 +30,7 @@ function showPage(pageId) {
     }
 
     const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => item.classList.remove('active', 'open')); // Hapus 'open' juga
+    navItems.forEach(item => item.classList.remove('active', 'open'));
 
     // Pastikan casing ID menu sesuai dengan HTML
     const basePageName = pageId.replace('Page', '');
@@ -49,6 +50,7 @@ function showPage(pageId) {
     }
 
     // Reset filter dan data terkait saat pindah halaman
+    // Kecuali jika pageId adalah mahasiswaBimbinganDetailPage (karena currentDosenFilter akan digunakan)
     if (pageId !== 'mahasiswaBimbinganDetailPage') {
         currentDosenFilter = null; // Reset filter dosen
         const searchBoxBimbingan = document.getElementById('searchBoxBimbingan');
@@ -56,15 +58,11 @@ function showPage(pageId) {
         if (searchBoxBimbingan) searchBoxBimbingan.value = '';
         if (statusFilterBimbingan) statusFilterBimbingan.value = 'all';
 
-        // Sembunyikan tombol kembali ke daftar dosen jika tidak di halaman bimbingan detail
-        const backButton = document.getElementById('backToDosenListBtn');
-        if(backButton) backButton.style.display = 'none';
-
         const backButtonFromBimbingan = document.getElementById('backToDosenListFromBimbinganBtn');
-        if(backButtonFromBimbingan) backButtonFromBimbingan.style.display = 'none'; // Sembunyikan juga tombol ini
+        if(backButtonFromBimbingan) backButtonFromBimbingan.style.display = 'none';
     }
 
-    // Reset filter pencarian dosen di halaman daftar dosen saat pindah dari halaman itu
+    // Reset pencarian dosen di halaman daftar dosen saat pindah dari halaman itu
     if (pageId !== 'dosenPembimbingPage') {
         const searchBoxDosen = document.getElementById('searchBoxDosen');
         if (searchBoxDosen) {
@@ -100,8 +98,8 @@ document.getElementById('showAllMahasiswa').addEventListener('click', function(e
 
 // NEW: Event listener untuk tombol kembali dari halaman detail mahasiswa bimbingan
 document.getElementById('backToDosenListFromBimbinganBtn').addEventListener('click', function() {
-    showPage('dosenPembimbingPage');
-    updateDashboard(); // Kembali ke daftar dosen
+    showPage('dosenPembimbingPage'); // Kembali ke halaman daftar dosen
+    updateDashboard(); // Perbarui halaman daftar dosen
 });
 
 
@@ -132,27 +130,53 @@ async function loadDataFromAppsScript() {
 
         if (result.data) {
             originalData = result.data;
-            // NEW: Ekstrak nama dosen unik di sini
+            // NEW: Ekstrak nama dosen unik dan hitung statistik dosen
             const dosenSet = new Set();
+            const tempDosenStats = {};
+
+            const progressStatuses = [
+                "Belum Proposal", "Sudah Proposal", "Seminar Hasil", "Pendadaran",
+                "Belum Ujian Komprehensif", "Sudah Ujian Komprehensif", "Sudah Yudisium"
+            ];
+
             originalData.forEach(d => {
-                if (d["Usulan Komisi SI (P1)"]) {
-                    dosenSet.add(d["Usulan Komisi SI (P1)"]);
-                }
-                if (d["Usulan Komisi (P2)"]) {
-                    dosenSet.add(d["Usulan Komisi (P2)"]);
-                }
+                const p1 = d["Usulan Komisi SI (P1)"];
+                const p2 = d["Usulan Komisi (P2)"];
+                const status = d.Status || "Other"; // Default status
+
+                // Pastikan setiap mahasiswa hanya dihitung sekali per dosen jika dosen tersebut P1 atau P2
+                const relevantDosen = [];
+                if (p1) relevantDosen.push(p1);
+                if (p2 && p2 !== p1) relevantDosen.push(p2); // Hindari duplikasi jika P1 == P2 (meskipun jarang)
+
+                relevantDosen.forEach(dosenName => {
+                    dosenSet.add(dosenName);
+                    if (!tempDosenStats[dosenName]) {
+                        tempDosenStats[dosenName] = { total: 0 };
+                        progressStatuses.forEach(s => tempDosenStats[dosenName][s] = 0);
+                        tempDosenStats[dosenName]["Other"] = 0;
+                    }
+                    // Hanya tambahkan 1 ke total bimbingan dan status jika dosen ini adalah pembimbing utama atau kedua dari mahasiswa ini
+                    tempDosenStats[dosenName].total++;
+                    if (tempDosenStats[dosenName].hasOwnProperty(status)) {
+                        tempDosenStats[dosenName][status]++;
+                    } else {
+                        tempDosenStats[dosenName]["Other"]++;
+                    }
+                });
             });
-            uniqueDosenNames = Array.from(dosenSet).sort(); // Simpan daftar dosen unik yang diurutkan
+
+            uniqueDosenNames = Array.from(dosenSet).sort();
+            dosenStats = tempDosenStats; // Simpan statistik lengkap
 
             populateProdiFilter(originalData);
             populateStatusFilter(originalData);
-            populateStatusFilterBimbingan(originalData); // NEW: Mengisi filter status untuk halaman mahasiswa bimbingan
-            updateDashboard();
+            populateStatusFilterBimbingan(originalData);
+            updateDashboard(); // Panggil untuk pertama kali saat data dimuat
         } else {
             console.warn('No data received from Apps Script.');
             document.getElementById("recentMahasiswaTable").innerHTML = `<p style='text-align:center; color:gray;'>Tidak ada data yang ditemukan.</p>`;
             document.getElementById("detailTable").innerHTML = `<p style='text-align:center; color:gray;'>Tidak ada data yang ditemukan.</p>`;
-            document.getElementById("dosenListTable").innerHTML = `<p style='text-align:center; color:gray;'>Tidak ada dosen ditemukan.</p>`;
             document.getElementById("mahasiswaBimbinganTable").innerHTML = `<p style='text-align:center; color:gray;'>Tidak ada data bimbingan yang ditemukan.</p>`;
         }
 
@@ -198,7 +222,7 @@ function populateStatusFilter(data) {
 }
 
 /**
- * NEW: Mengisi dropdown filter Status untuk halaman mahasiswaBimbinganDetailPage.
+ * Mengisi dropdown filter Status untuk halaman mahasiswaBimbinganDetailPage.
  * @param {Array<Object>} data - Data mahasiswa.
  */
 function populateStatusFilterBimbingan(data) {
@@ -213,9 +237,8 @@ function populateStatusFilterBimbingan(data) {
     });
 }
 
-
 /**
- * NEW: Memperbarui tabel daftar dosen.
+ * NEW: Memperbarui tabel daftar dosen (di dosenPembimbingPage).
  * Ini akan menampilkan tabel dosen yang bisa diklik.
  */
 function updateDosenListTable() {
@@ -238,19 +261,8 @@ function updateDosenListTable() {
         </tr>
     </thead><tbody>`;
 
-    // Hitung jumlah mahasiswa bimbingan per dosen
-    const dosenBimbinganCount = {};
-    originalData.forEach(d => {
-        if (d["Usulan Komisi SI (P1)"] && filteredDosen.includes(d["Usulan Komisi SI (P1)"])) {
-            dosenBimbinganCount[d["Usulan Komisi SI (P1)"]] = (dosenBimbinganCount[d["Usulan Komisi SI (P1)"]] || 0) + 1;
-        }
-        if (d["Usulan Komisi (P2)"] && filteredDosen.includes(d["Usulan Komisi (P2)"])) {
-            dosenBimbinganCount[d["Usulan Komisi (P2)"]] = (dosenBimbinganCount[d["Usulan Komisi (P2)"]] || 0) + 1;
-        }
-    });
-
     filteredDosen.forEach((dosenName, i) => {
-        const count = dosenBimbinganCount[dosenName] || 0;
+        const count = dosenStats[dosenName] ? dosenStats[dosenName].total : 0;
         tableHTML += `<tr data-dosen-name="${dosenName}">
             <td>${i + 1}</td>
             <td class="nama-dosen">${dosenName}</td>
@@ -269,9 +281,51 @@ function updateDosenListTable() {
             currentDosenFilter = dosenName; // Set filter dosen global
             document.getElementById('currentDosenName').innerText = dosenName; // Update heading di halaman detail
             showPage('mahasiswaBimbinganDetailPage'); // Tampilkan halaman detail mahasiswa bimbingan
+            renderDosenStatsCards(dosenName); // Render kartu statistik
             updateDashboard(); // Perbarui dashboard untuk menampilkan mahasiswa bimbingan dosen tersebut
             document.getElementById('backToDosenListFromBimbinganBtn').style.display = 'block'; // Tampilkan tombol kembali
         });
+    });
+}
+
+
+/**
+ * NEW: Merender kartu statistik dosen di halaman mahasiswaBimbinganDetailPage.
+ * @param {string} dosenName - Nama dosen yang statistik bimbingannya akan ditampilkan.
+ */
+function renderDosenStatsCards(dosenName) {
+    const cardsContainer = document.getElementById('dosenStatsCards');
+    if (!cardsContainer) return;
+
+    cardsContainer.innerHTML = ''; // Bersihkan kartu lama
+
+    const stats = dosenStats[dosenName] || {};
+    const totalBimbingan = stats.total || 0;
+
+    const statOrder = [
+        { label: "Total Dibimbing", key: "total", icon: "fas fa-users" },
+        { label: "Sudah Proposal", key: "Sudah Proposal", icon: "fas fa-check-circle" },
+        { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-clipboard-check" },
+        { label: "Pendadaran", key: "Pendadaran", icon: "fas fa-graduation-cap" },
+        { label: "Sudah Yudisium", key: "Sudah Yudisium", icon: "fas fa-award" },
+        { label: "Belum Proposal", key: "Belum Proposal", icon: "fas fa-times-circle" },
+        { label: "Belum Ujian Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-exclamation-circle" },
+        { label: "Sudah Ujian Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-trophy" }
+    ];
+
+    statOrder.forEach(stat => {
+        const value = stats[stat.key] || 0;
+        const percentage = totalBimbingan > 0 ? ((value / totalBimbingan) * 100).toFixed(1) : 0;
+        const cardClass = stat.key.replace(/\s/g, ''); // Hapus spasi untuk kelas CSS
+
+        const cardHtml = `
+            <div class="dosen-summary-card ${cardClass}">
+                <div class="label"><i class="${stat.icon}"></i> ${stat.label}</div>
+                <div class="value">${value}</div>
+                <div class="percentage">${percentage}%</div>
+            </div>
+        `;
+        cardsContainer.innerHTML += cardHtml;
     });
 }
 
@@ -564,8 +618,10 @@ function countOccurrences(data, key) {
  */
 function getFilteredData() {
     const dataMahasiswaPage = document.getElementById('dataMahasiswaPage');
-    const dosenPembimbingPage = document.getElementById('dosenPembimbingPage');
-    const mahasiswaBimbinganDetailPage = document.getElementById('mahasiswaBimbinganDetailPage');
+    const dosenPembimbingPage = document.getElementById('dosenPembimbingPage'); // Halaman daftar dosen
+    const mahasiswaBimbinganDetailPage = document.getElementById('mahasiswaBimbinganDetailPage'); // Halaman detail bimbingan
+
+    let filteredData = originalData;
 
     if (dataMahasiswaPage.style.display === 'block') {
         const keyword = document.getElementById('searchBox').value.toLowerCase();
@@ -594,7 +650,7 @@ function getFilteredData() {
             return matchDosen && matchKeyword && matchStatus;
         });
     }
-    // Jika di halaman dashboard atau analytics, atau halaman daftar dosen, tidak ada filter data spesifik
+    // Jika di halaman dashboard atau analytics atau halaman dosenPembimbingPage (daftar dosen)
     return originalData;
 }
 
@@ -609,7 +665,7 @@ function updateDashboard() {
     const mahasiswaBimbinganDetailPage = document.getElementById('mahasiswaBimbinganDetailPage');
     const analyticsPage = document.getElementById('analyticsPage');
 
-    const filteredForTablesAndCharts = getFilteredData(); // Ini akan memfilter data global jika di halaman Data Mahasiswa atau Mahasiswa Bimbingan Detail
+    const filteredForTablesAndCharts = getFilteredData();
 
     if (dashboardPage.style.display === 'block') {
         updateStats(filteredForTablesAndCharts);
@@ -620,6 +676,10 @@ function updateDashboard() {
         updateDosenListTable(); // Panggil fungsi baru untuk menampilkan daftar dosen
     } else if (mahasiswaBimbinganDetailPage.style.display === 'block') {
         updateTable(filteredForTablesAndCharts, 'mahasiswaBimbinganTable', null, true);
+        // Penting: render kartu statistik di sini juga agar selalu diperbarui
+        if (currentDosenFilter) {
+            renderDosenStatsCards(currentDosenFilter);
+        }
     } else if (analyticsPage.style.display === 'block') {
         updateCharts(filteredForTablesAndCharts);
     }
