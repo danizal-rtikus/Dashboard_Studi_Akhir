@@ -1,0 +1,608 @@
+/* Transisi global untuk properti yang umum berubah */
+* {
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, opacity 0.3s ease, width 0.3s ease, margin-left 0.3s ease, padding 0.3s ease;
+}
+/* Global styles and body background */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    overflow-y: auto;
+    box-sizing: border-box;
+    transition: none;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #f4f6f9;
+    min-height: 100vh;
+    color: #333;
+    transition: margin-left 0.3s ease;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: 250px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    position: fixed;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    z-index: 10;
+    transition: width 0.3s ease, padding 0.3s ease;
+    overflow-x: hidden;
+}
+.sidebar-logo {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 40px;
+}
+.sidebar-logo img {
+    width: 150px;
+    height: auto;
+    transition: width 0.3s ease;
+}
+.nav-item {
+    color: #555;
+    font-size: 16px;
+    margin: 10px 0;
+    cursor: pointer;
+    transition: color 0.3s, background-color 0.3s, border-radius 0.3s, box-shadow 0.3s;
+    text-align: left;
+    padding: 10px 15px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    white-space: nowrap;
+    position: relative; /* Tetap pertahankan ini jika suatu saat ada dropdown lain */
+}
+.nav-item i {
+    font-size: 20px;
+    margin-right: 15px;
+    transition: margin-right 0.3s ease, transform 0.2s ease;
+}
+.nav-item span {
+    display: inline;
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+.nav-item:hover i {
+    transform: scale(1.1);
+}
+.nav-item:hover, .nav-item.active {
+    color: #3498db;
+    background-color: #eaf6ff;
+    font-weight: 600;
+}
+.nav-item.active {
+    box-shadow: inset 3px 0 0 #3498db;
+}
+
+/* Hapus atau nonaktifkan gaya dropdown lama */
+/* .nav-item .dropdown-arrow { display: none; } */
+/* .dropdown-content { display: none; } */
+/* .nav-item.open .dropdown-content { display: none; } */
+/* .dropdown-search-input { display: none; } */
+/* .dropdown-list-container { display: none; } */
+
+/* Main Content Area */
+.main-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+}
+.main-body {
+    padding: 30px;
+    flex-grow: 1;
+}
+
+/* Header Styling */
+.header {
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 25px;
+    border-radius: 15px;
+    margin: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.header-left .logo-text {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+}
+.sidebar-toggle {
+    font-size: 24px;
+    color: #555;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+.sidebar-toggle:hover {
+    color: #3498db;
+    transform: scale(1.1);
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.header-right .date-display {
+    font-size: 14px;
+    color: #777;
+}
+/* Refresh Icon Styling */
+.refresh-icon {
+    font-size: 20px;
+    color: #555;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.refresh-icon:hover {
+    color: #3498db;
+    transform: rotate(30deg);
+}
+
+/* Responsive adjustment for refresh icon */
+@media screen and (max-width: 768px) {
+    .header-right .refresh-icon {
+        order: 3;
+        font-size: 20px;
+    }
+}
+.header-right .profile-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.header-right .profile-name {
+    font-weight: 600;
+    font-size: 15px;
+}
+.header-right .profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #3498db;
+}
+.header-right .menu-icon {
+    font-size: 24px;
+    color: #555;
+    cursor: pointer;
+    display: none;
+}
+
+/* Overview Cards Styling (Matching the image) */
+.overview-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+.overview-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #eee;
+}
+.overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #3498db;
+}
+.overview-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+.overview-card-icon {
+    font-size: 30px;
+    color: #3498db;
+    background-color: #eaf6ff;
+    padding: 10px;
+    border-radius: 50%;
+}
+.overview-card-title {
+    font-size: 16px;
+    color: #777;
+    margin-bottom: 5px;
+}
+.overview-card-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: #333;
+}
+.overview-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+.overview-card-percentage {
+    font-weight: bold;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.overview-card-percentage.positive { color: #2ecc71; }
+.overview-card-percentage.negative { color: #e74c3c; }
+.overview-card-percentage i { font-size: 12px; }
+.overview-card-time {
+    font-size: 13px;
+    color: #999;
+}
+
+/* Circular Progress Bar (simple CSS based) */
+.circular-progress {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+.circular-progress-inner {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #fff;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+}
+.circular-progress-gradient {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(#3498db var(--progress, 0%), #eee var(--progress, 0%));
+}
+
+/* Recent Orders / Table Section */
+.section {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+}
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.section-header h3 {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+.show-all-link {
+    font-size: 14px;
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+.show-all-link:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+th, td {
+    border: none;
+    font-size: 14px;
+    padding: 12px 15px;
+    text-align: left;
+}
+th {
+    background-color: #f8f9fa;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid #eee;
+}
+td {
+    background-color: #fff;
+    color: #444;
+    border-bottom: 1px solid #f0f0f0;
+}
+table tbody tr:last-child td {
+    border-bottom: none;
+}
+table tbody tr {
+    transition: background-color 0.2s ease, filter 0.2s ease;
+}
+table tbody tr:hover {
+    background-color: #eaf6ff;
+    filter: brightness(80%);
+}
+td.nama,
+td.program-studi {
+    text-align: left;
+}
+/* Specific font size for tables */
+#dataMahasiswaPage table td,
+#dosenPembimbingPage table td, /* Untuk tabel daftar dosen */
+#mahasiswaBimbinganTable table td { /* Untuk tabel mahasiswa bimbingan */
+    font-size: 14px;
+}
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+/* Gaya untuk status progress skripsi/TA */
+.status-badge.BelumProposal { background-color: #e74c3c; }
+.status-badge.SudahProposal { background-color: #3498db; }
+.status-badge.SeminarHasil { background-color: #9b59b6; }
+.status-badge.Pendadaran { background-color: #2ecc71; }
+.status-badge.BelumUjianKomprehensif { background-color: #e74c3c; }
+.status-badge.SudahUjianKomprehensif { background-color: #3498db; }
+.status-badge.SudahYudisium { background-color: #1abc9c; }
+.status-badge.Other { background-color: #7f8c8d; }
+
+/* Pagination Button Styling */
+.pagination-button {
+    padding: 8px 16px;
+    margin: 0 5px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #555;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.pagination-button:hover:not(:disabled) {
+    background-color: #f0f0f0;
+    color: #3498db;
+    border-color: #c0c0c0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.pagination-button:disabled {
+    background: #f8f8f8;
+    color: #bbb;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Filters and Search on Data Mahasiswa Page (dan halaman dosen) */
+.filter-bar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    background: #fff;
+    padding: 15px 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+.filter-bar input[type="text"],
+.filter-bar select {
+    flex: 1;
+    min-width: 150px;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+    color: #333;
+    background-color: #fcfcfc;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+.filter-bar input[type="text"]:focus,
+.filter-bar select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    background-color: #fff;
+}
+
+/* Styles for Collapsed Sidebar */
+body.sidebar-collapsed .sidebar {
+    width: 80px;
+    padding: 20px 0;
+    align-items: center;
+}
+body.sidebar-collapsed .sidebar-logo img {
+    width: 50px;
+}
+body.sidebar-collapsed .nav-item {
+    padding: 10px 0;
+    justify-content: center;
+}
+body.sidebar-collapsed .nav-item i {
+    margin-right: 0;
+}
+body.sidebar-collapsed .nav-item span {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    display: none;
+}
+body.sidebar-collapsed .main-wrapper {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+}
+
+/* Hapus penyesuaian dropdown untuk sidebar yang diciutkan karena tidak ada lagi dropdown */
+/* body.sidebar-collapsed .nav-item .dropdown-arrow { display: none; } */
+/* body.sidebar-collapsed .dropdown-content { left: 80px; top: 0; transform: translateX(0); } */
+
+/* Responsive Media Queries */
+@media screen and (max-width: 1024px) {
+    .sidebar {
+        width: 80px;
+        align-items: center;
+        padding: 20px 0;
+    }
+    .sidebar-logo img {
+        width: 50px;
+    }
+    .nav-item {
+        padding: 10px 0;
+        justify-content: center;
+    }
+    .nav-item i { margin-right: 0; }
+    .nav-item span { display: none; }
+    .main-wrapper {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+    }
+    .header-left .logo-text { font-size: 24px; }
+    .overview-card { padding: 20px; }
+    .overview-card-value { font-size: 32px; }
+    .circular-progress { width: 60px; height: 60px; }
+    .circular-progress-inner { width: 50px; height: 50px; font-size: 12px; }
+    .circular-progress-gradient { background: conic-gradient(#3498db var(--progress, 0%), #eee var(--progress, 0%)); }
+
+    .section h3 { font-size: 20px; }
+    th, td { font-size: 13px; padding: 10px; }
+    .filter-bar input[type="text"],
+    .filter-bar select { min-width: unset; }
+
+    body.sidebar-collapsed .sidebar {
+        width: 80px;
+    }
+    body.sidebar-collapsed .main-wrapper {
+        margin-left: 80px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    body { flex-direction: column; }
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 10px 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-bottom: 1px solid #eee;
+        align-items: center;
+    }
+    .sidebar-logo { display: none; }
+    .nav-item { margin: 0 5px; padding: 8px 10px; border-radius: 5px; }
+    .nav-item i { margin-right: 5px; }
+    .nav-item span { display: inline; font-size: 12px; }
+    .main-wrapper {
+        margin-left: 0;
+        padding: 0;
+        width: 100%;
+    }
+    .main-body {
+        padding: 20px;
+    }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+        gap: 15px;
+        margin: 15px;
+    }
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .header-right .profile-section { order: 2; }
+    .header-right .date-display { order: 1; }
+    .header-right .menu-icon { display: block; }
+
+    .overview-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    .overview-card { padding: 20px; }
+    .overview-card-value { font-size: 30px; }
+    .circular-progress { width: 50px; height: 50px; }
+    .circular-progress-inner { width: 40px; height: 40px; font-size: 10px; }
+    .circular-progress-gradient { background: conic-gradient(#3498db var(--progress, 0%), #eee var(--progress, 0%)); }
+
+    .filter-bar {
+        flex-direction: column;
+        gap: 10px;
+        margin: 15px;
+    }
+    .filter-bar input[type="text"],
+    .filter-bar select { width: 100%; }
+    th, td { font-size: 11px; padding: 8px; }
+    .status-badge { padding: 3px 6px; font-size: 11px; }
+
+    body.sidebar-collapsed .sidebar {
+        width: 100%;
+    }
+    body.sidebar-collapsed .main-wrapper {
+        margin-left: 0;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .main-body { padding: 15px; }
+    .header-left .logo-text { font-size: 22px; }
+    .overview-card-value { font-size: 28px; }
+    .overview-card-icon { font-size: 25px; padding: 8px; }
+    .circular-progress { width: 45px; height: 45px; }
+    .circular-progress-inner { width: 35px; height: 35px; font-size: 9px; }
+    .circular-progress-gradient { background: conic-gradient(#3498db var(--progress, 0%), #eee var(--progress, 0%)); }
+    .section { padding: 20px; }
+    .section-header h3 { font-size: 18px; }
+    th, td { font-size: 10px; padding: 6px; }
+    .pagination-button { padding: 6px 12px; font-size: 12px; }
+}
