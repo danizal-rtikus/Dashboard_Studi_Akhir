@@ -63,7 +63,7 @@ body {
     align-items: center;
     border-radius: 8px;
     white-space: nowrap;
-    position: relative; /* Tetap pertahankan ini jika suatu saat ada dropdown lain */
+    position: relative;
 }
 .nav-item i {
     font-size: 20px;
@@ -89,12 +89,23 @@ body {
     box-shadow: inset 3px 0 0 #3498db;
 }
 
-/* Hapus atau nonaktifkan gaya dropdown lama */
-/* .nav-item .dropdown-arrow { display: none; } */
-/* .dropdown-content { display: none; } */
-/* .nav-item.open .dropdown-content { display: none; } */
-/* .dropdown-search-input { display: none; } */
-/* .dropdown-list-container { display: none; } */
+/* Hapus semua gaya yang terkait dengan dropdown dosen di sidebar (karena sudah dipindahkan) */
+.nav-item .dropdown-arrow { display: none; }
+.dropdown-content { display: none; }
+.nav-item.open .dropdown-content { display: none; }
+.dropdown-search-input { display: none; }
+.dropdown-list-container { display: none; }
+/* Hapus juga gaya dosen-card-item yang lama jika ada konflik */
+/* .dosen-card-item { ... } */
+/* .dosen-card-item .dosen-name { ... } */
+/* .dosen-card-item .stats-grid { ... } */
+/* .dosen-card-item .stat-item { ... } */
+/* .dosen-card-item .stat-label { ... } */
+/* .dosen-card-item .stat-value { ... } */
+/* .dosen-card-item .stat-percent { ... } */
+/* .dosen-card-item .status-icon-small { ... } */
+/* .nav-item.open .dropdown-arrow { display: none; } */
+
 
 /* Main Content Area */
 .main-wrapper {
@@ -481,9 +492,54 @@ body.sidebar-collapsed .main-wrapper {
     width: calc(100% - 80px);
 }
 
-/* Hapus penyesuaian dropdown untuk sidebar yang diciutkan karena tidak ada lagi dropdown */
-/* body.sidebar-collapsed .nav-item .dropdown-arrow { display: none; } */
-/* body.sidebar-collapsed .dropdown-content { left: 80px; top: 0; transform: translateX(0); } */
+/* --- Gaya untuk Kartu Dosen di dalam Halaman Detail Bimbingan --- */
+#dosenStatsCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Kolom yang lebih kecil untuk banyak kartu */
+    gap: 15px; /* Jarak antar kartu */
+    margin-bottom: 30px;
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+}
+
+.dosen-summary-card {
+    background: #f8f9fa; /* Latar belakang lebih terang */
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    text-align: center;
+}
+
+.dosen-summary-card.total { background-color: #eaf6ff; } /* Biru muda */
+.dosen-summary-card.SudahProposal { background-color: #d1ecf1; } /* Info */
+.dosen-summary-card.SeminarHasil { background-color: #e2eafc; } /* Ungu muda */
+.dosen-summary-card.Pendadaran { background-color: #d4edda; } /* Hijau muda */
+.dosen-summary-card.SudahYudisium { background-color: #cce5ff; } /* Biru sangat muda */
+.dosen-summary-card.BelumProposal { background-color: #f8d7da; } /* Merah muda */
+.dosen-summary-card.BelumUjianKomprehensif { background-color: #f8d7da; } /* Merah muda */
+.dosen-summary-card.SudahUjianKomprehensif { background-color: #d4edda; } /* Hijau muda */
+
+
+.dosen-summary-card .label {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+.dosen-summary-card .value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+.dosen-summary-card .percentage {
+    font-size: 11px;
+    color: #666;
+}
+
 
 /* Responsive Media Queries */
 @media screen and (max-width: 1024px) {
@@ -523,6 +579,16 @@ body.sidebar-collapsed .main-wrapper {
     body.sidebar-collapsed .main-wrapper {
         margin-left: 80px;
     }
+
+    /* Penyesuaian kartu statistik dosen di tablet */
+    #dosenStatsCards {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        padding: 20px;
+    }
+    .dosen-summary-card .value { font-size: 20px; }
+    .dosen-summary-card .label { font-size: 11px; }
+    .dosen-summary-card .percentage { font-size: 10px; }
 }
 
 @media screen and (max-width: 768px) {
@@ -591,6 +657,19 @@ body.sidebar-collapsed .main-wrapper {
     body.sidebar-collapsed .main-wrapper {
         margin-left: 0;
     }
+
+    /* Penyesuaian kartu statistik dosen di mobile */
+    #dosenStatsCards {
+        grid-template-columns: repeat(2, 1fr); /* 2 kolom di mobile agar tidak terlalu kecil */
+        gap: 8px;
+        padding: 15px;
+    }
+    .dosen-summary-card {
+        padding: 10px;
+    }
+    .dosen-summary-card .value { font-size: 18px; }
+    .dosen-summary-card .label { font-size: 10px; }
+    .dosen-summary-card .percentage { font-size: 9px; }
 }
 
 @media screen and (max-width: 480px) {
@@ -605,4 +684,8 @@ body.sidebar-collapsed .main-wrapper {
     .section-header h3 { font-size: 18px; }
     th, td { font-size: 10px; padding: 6px; }
     .pagination-button { padding: 6px 12px; font-size: 12px; }
+
+    #dosenStatsCards {
+        grid-template-columns: 1fr; /* 1 kolom di layar sangat kecil */
+    }
 }
