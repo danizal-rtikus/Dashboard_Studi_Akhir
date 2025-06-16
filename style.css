@@ -516,12 +516,12 @@ body.sidebar-collapsed .main-wrapper {
 
 .dosen-summary-card.total { background-color: #eaf6ff; } /* Biru muda */
 .dosen-summary-card.SudahProposal { background-color: #d1ecf1; } /* Info */
-.dosen-summary-card.SeminarHasil { background-color: #e2eafc; } /* Ungu muda */
-.dosen-summary-card.Pendadaran { background-color: #d4edda; } /* Hijau muda */
-.dosen-summary-card.SudahYudisium { background-color: #cce5ff; } /* Biru sangat muda */
+.dosen-summary-card.SeminarHasil { background-color: #d1ecf1; } /* Ungu muda */
+.dosen-summary-card.Pendadaran { background-color: #d1ecf1; } /* Hijau muda */
+.dosen-summary-card.SudahYudisium { background-color: #d4edda; } /* Biru sangat muda */
 .dosen-summary-card.BelumProposal { background-color: #f8d7da; } /* Merah muda */
 .dosen-summary-card.BelumUjianKomprehensif { background-color: #f8d7da; } /* Merah muda */
-.dosen-summary-card.SudahUjianKomprehensif { background-color: #d4edda; } /* Hijau muda */
+.dosen-summary-card.SudahUjianKomprehensif { background-color: #d1ecf1; } /* Hijau muda */
 
 
 .dosen-summary-card .label {
