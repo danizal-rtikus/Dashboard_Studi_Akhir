@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYS Academic Progress Dashboard</title>
+    <title>SYS Monitoring Progress Skripsi/TA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -16,7 +16,7 @@
             <img src="your-logo.png" alt="SYS Logo">
         </div>
         <div class="nav-item active" id="menuDashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></div>
-        <div class="nav-item" id="menuDataMahasiswa"><i class="fas fa-users"></i><span>Mahasiswa Skripsi/TA</span></div>
+        <div class="nav-item" id="menuDataMahasiswa"><i class="fas fa-users"></i><span>Data Mahasiswa</span></div>
         <div class="nav-item" id="menuDosenPembimbing"><i class="fas fa-chalkboard-teacher"></i><span>Dosen Pembimbing</span></div>
         <div class="nav-item" id="menuAnalytics"><i class="fas fa-chart-pie"></i><span>Grafik</span></div>
         <div class="nav-item" id="menuReport"><i class="fas fa-file-alt"></i><span>Report</span></div>
@@ -27,7 +27,7 @@
         <div class="header">
             <div class="header-left">
                 <i class="fas fa-bars sidebar-toggle" id="sidebarToggle"></i>
-                <div class="logo-text">Dashboard Progress Skripsi/TA</div>
+                <div class="logo-text">Dashboard Monitoring Skripsi/TA</div>
             </div>
             <div class="header-right">
                 <div class="date-display" id="currentDate"></div>
@@ -161,20 +161,22 @@
                     <h3>Daftar Dosen Pembimbing</h3>
                     <div id="dosenListTable">
                         </div>
-                    <button id="backToDosenListBtn" class="pagination-button" style="display:none; margin-top: 20px;">
-                        <i class="fas fa-arrow-left"></i> Kembali ke Daftar Dosen
-                    </button>
                 </div>
             </div>
             <div id="mahasiswaBimbinganDetailPage" class="page-section" style="display:none;">
-                <div class="filter-bar">
+                <div class="section">
+                    <h3>Statistik Bimbingan Dosen: <span id="currentDosenName"></span></h3>
+                    <div class="overview-cards-grid" id="dosenStatsCards">
+                        </div>
+                </div>
+                <div class="filter-bar" style="margin-top: 25px;">
                     <input type="text" id="searchBoxBimbingan" placeholder="Cari Nama/NIM Mahasiswa Bimbingan...">
                     <select id="statusFilterBimbingan">
                         <option value="all">Semua Status</option>
                     </select>
                 </div>
                 <div class="section">
-                    <h3>Daftar Mahasiswa Bimbingan: <span id="currentDosenName"></span></h3>
+                    <h3>Daftar Mahasiswa Bimbingan</h3>
                     <div id="mahasiswaBimbinganTable">
                         </div>
                     <button id="backToDosenListFromBimbinganBtn" class="pagination-button" style="margin-top: 20px;">
