@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYS Academic Dashboard</title>
+    <title>SYS Dashboard Monitoring Studi Akhir</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -27,7 +27,7 @@
         <div class="header">
             <div class="header-left">
                 <i class="fas fa-bars sidebar-toggle" id="sidebarToggle"></i>
-                <div class="logo-text">Dashboard Monitoring SKRIPSI/TA</div>
+                <div class="logo-text">Dashboard Monitoring Studi Akhir</div>
             </div>
             <div class="header-right">
                 <div class="date-display" id="currentDate"></div>
@@ -41,12 +41,17 @@
         </div>
 
         <div class="main-body">
+            <!-- Container untuk pesan global (loading/error) -->
+            <div id="globalMessageContainer" class="global-message-container"></div>
+
+            <!-- Section Dashboard -->
             <div id="dashboardPage" class="page-section">
                 <div class="overview-cards-grid">
+                    <!-- KARTU 1: Jumlah Mahasiswa Skripsi/TA -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Jumlah Mahasiswa Skripsi/TA</div>
+                                <div class="overview-card-title">Jumlah Mahasiswa Studi Akhir</div>
                                 <div class="overview-card-value" id="totalMahasiswaSkripsiTA">-</div>
                             </div>
                             <div class="circular-progress">
@@ -60,10 +65,11 @@
                         </div>
                     </div>
 
+                    <!-- KARTU 2: Jumlah Prodi SI -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Jumlah Prodi SI</div>
+                                <div class="overview-card-title">Sistem Informasi</div>
                                 <div class="overview-card-value" id="jumlahProdiSI">-</div>
                             </div>
                             <div class="circular-progress">
@@ -73,14 +79,15 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiSIChange">0%</span></div>
-                            <div class="overview-card-time">Sistem Informasi</div>
+                            <div class="overview-card-time">Mahasiswa Skripsi</div>
                         </div>
                     </div>
 
+                    <!-- KARTU 3: Jumlah Prodi TI -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Jumlah Prodi TI</div>
+                                <div class="overview-card-title">Teknik Informatika</div>
                                 <div class="overview-card-value" id="jumlahProdiTI">-</div>
                             </div>
                             <div class="circular-progress">
@@ -90,14 +97,15 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiTIChange">0%</span></div>
-                            <div class="overview-card-time">Teknik Informatika</div>
+                            <div class="overview-card-time">Mahasiswa Skripsi</div>
                         </div>
                     </div>
 
+                    <!-- KARTU 4: Jumlah Prodi TMJ -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Jumlah Prodi TMJ</div>
+                                <div class="overview-card-title">Teknik Multimedia dan Jaringan</div>
                                 <div class="overview-card-value" id="jumlahProdiTMJ">-</div>
                             </div>
                             <div class="circular-progress">
@@ -107,14 +115,15 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiTMJChange">0%</span></div>
-                            <div class="overview-card-time">Teknik Multimedia dan Jaringan</div>
+                            <div class="overview-card-time">Mahasiswa Skripsi</div>
                         </div>
                     </div>
 
+                    <!-- KARTU 5: Jumlah Prodi KA -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Jumlah Prodi KA</div>
+                                <div class="overview-card-title">Komputerisasi Akuntansi</div>
                                 <div class="overview-card-value" id="jumlahProdiKA">-</div>
                             </div>
                             <div class="circular-progress">
@@ -124,14 +133,14 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiKAChange">0%</span></div>
-                            <div class="overview-card-time">Komputerisasi Akuntansi</div>
+                            <div class="overview-card-time">Mahasiswa Tugas Akhir</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="section">
                     <div class="section-header">
-                        <h3>Statistik Progress per Program Studi</h3>
+                        <h3>Statistik Progress Studi Akhir</h3>
                         <a href="#" class="show-all-link" id="showAllMahasiswa">Show All</a>
                     </div>
                     <div id="recentMahasiswaTable">
@@ -186,12 +195,24 @@
             </div>
             <div id="analyticsPage" class="page-section" style="display:none;">
                 <div class="section">
-                    <h3>Populasi Program Studi</h3>
+                    <h3>Grafik Mahasiswa Studi Akhir</h3>
                     <div id="programStudiChart"></div>
                 </div>
                 <div class="section">
-                    <h3>Populasi Status Penelaahan</h3>
-                    <div id="statusChart"></div>
+                    <h3>Program Studi - Sistem Informasi</h3>
+                    <div id="progressStatusChartSI"></div>
+                </div>
+                <div class="section">
+                    <h3>Program Studi - Teknik Informatika</h3>
+                    <div id="progressStatusChartTI"></div>
+                </div>
+                <div class="section">
+                    <h3>Program Studi - Teknik Multimedia dan Jaringan</h3>
+                    <div id="progressStatusChartTMJ"></div>
+                </div>
+                <div class="section">
+                    <h3>Program Studi - Komputerisasi Akuntansi</h3>
+                    <div id="progressStatusChartKA"></div>
                 </div>
             </div>
 
