@@ -16,39 +16,39 @@ html, body {
 }
 body {
     display: flex;
-    flex-direction: column;
-    background-color: #f4f6f9;
+    flex-direction: column; /* Changed to column to allow footer at the bottom */
+    background-color: #f4f6f9; /* Light background similar to image */
     min-height: 100vh;
-    color: #333;
-    transition: margin-left 0.3s ease;
+    color: #333; /* Default text color */
+    transition: margin-left 0.3s ease; /* Smooth transition for body content */
 }
 
 /* Sidebar Styling */
 .sidebar {
-    width: 250px;
-    background-color: #fff;
+    width: 250px; /* Default wider sidebar */
+    background-color: #fff; /* White background */
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-start; /* Align items to start */
     padding: 20px;
     position: fixed;
     height: 100vh;
     top: 0;
     left: 0;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05); /* Softer shadow */
     z-index: 10;
-    transition: width 0.3s ease, padding 0.3s ease;
-    overflow-x: hidden;
+    transition: width 0.3s ease, padding 0.3s ease; /* Smooth transition for sidebar width */
+    overflow-x: hidden; /* Hide horizontal overflow during collapse */
 }
 .sidebar-logo {
-    width: 100%;
+    width: 100%; /* Ensure logo div takes full width */
     text-align: center;
     margin-bottom: 40px;
 }
-.sidebar-logo img {
-    width: 150px;
+.sidebar-logo img { /* Image within sidebar logo */
+    width: 150px; /* Larger logo image */
     height: auto;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease; /* Smooth transition for logo image */
 }
 .nav-item {
     color: #555;
@@ -62,23 +62,23 @@ body {
     display: flex;
     align-items: center;
     border-radius: 8px;
-    white-space: nowrap;
-    position: relative;
+    white-space: nowrap; /* Prevent text wrapping */
+    position: relative; /* Tetap pertahankan ini jika suatu saat ada dropdown lain */
 }
 .nav-item i {
     font-size: 20px;
     margin-right: 15px;
-    transition: margin-right 0.3s ease, transform 0.2s ease;
+    transition: margin-right 0.3s ease, transform 0.2s ease; /* Tambahkan transform */;
 }
 .nav-item span {
     display: inline;
     font-size: 16px;
     font-weight: 500;
-    opacity: 1;
-    transition: opacity 0.3s ease;
+    opacity: 1; /* Default opacity */
+    transition: opacity 0.3s ease; /* Smooth transition for text opacity */
 }
 .nav-item:hover i {
-    transform: scale(1.1);
+    transform: scale(1.1); /* Sedikit membesar saat hover */
 }
 .nav-item:hover, .nav-item.active {
     color: #3498db;
@@ -95,30 +95,20 @@ body {
 .nav-item.open .dropdown-content { display: none; }
 .dropdown-search-input { display: none; }
 .dropdown-list-container { display: none; }
-/* Hapus juga gaya dosen-card-item yang lama jika ada konflik */
-/* .dosen-card-item { ... } */
-/* .dosen-card-item .dosen-name { ... } */
-/* .dosen-card-item .stats-grid { ... } */
-/* .dosen-card-item .stat-item { ... } */
-/* .dosen-card-item .stat-label { ... } */
-/* .dosen-card-item .stat-value { ... } */
-/* .dosen-card-item .stat-percent { ... } */
-/* .dosen-card-item .status-icon-small { ... } */
-/* .nav-item.open .dropdown-arrow { display: none; } */
 
 
 /* Main Content Area */
-.main-wrapper {
+.main-wrapper { /* New wrapper for header + content */
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    margin-left: 250px;
-    width: calc(100% - 250px);
-    transition: margin-left 0.3s ease, width 0.3s ease;
+    margin-left: 250px; /* Adjusted to match sidebar width */
+    width: calc(100% - 250px); /* Adjust width for sidebar */
+    transition: margin-left 0.3s ease, width 0.3s ease; /* Smooth transition for main-body */
 }
-.main-body {
+.main-body { /* Actual content area */
     padding: 30px;
-    flex-grow: 1;
+    flex-grow: 1; /* Allows content to take available space */
 }
 
 /* Header Styling */
@@ -129,21 +119,21 @@ body {
     justify-content: space-between;
     padding: 15px 25px;
     border-radius: 15px;
-    margin: 30px;
+    margin: 30px; /* Added margin */
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     border: 1px solid #eee;
 }
 .header-left {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 20px; /* Space between toggle and logo text */
 }
 .header-left .logo-text {
     font-size: 28px;
     font-weight: bold;
     color: #333;
 }
-.sidebar-toggle {
+.sidebar-toggle { /* Style for the new toggle button */
     font-size: 24px;
     color: #555;
     cursor: pointer;
@@ -164,22 +154,22 @@ body {
 }
 /* Refresh Icon Styling */
 .refresh-icon {
-    font-size: 20px;
-    color: #555;
-    cursor: pointer;
-    transition: transform 0.3s ease, color 0.3s ease;
+    font-size: 20px; /* Ukuran ikon */
+    color: #555; /* Warna ikon */
+    cursor: pointer; /* Menunjukkan bahwa ini dapat diklik */
+    transition: transform 0.3s ease, color 0.3s ease; /* Transisi halus untuk hover */
 }
 
 .refresh-icon:hover {
-    color: #3498db;
-    transform: rotate(30deg);
+    color: #3498db; /* Warna saat hover */
+    transform: rotate(30deg); /* Efek putar saat hover */
 }
 
 /* Responsive adjustment for refresh icon */
 @media screen and (max-width: 768px) {
     .header-right .refresh-icon {
-        order: 3;
-        font-size: 20px;
+        order: 3; /* Posisikan setelah profile-section di mobile */
+        font-size: 20px; /* Ukuran yang sesuai untuk mobile */
     }
 }
 .header-right .profile-section {
@@ -202,7 +192,7 @@ body {
     font-size: 24px;
     color: #555;
     cursor: pointer;
-    display: none;
+    display: none; /* Hidden on desktop, shown on mobile */
 }
 
 /* Overview Cards Styling (Matching the image) */
@@ -226,7 +216,7 @@ body {
 .overview-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    border-color: #3498db;
+    border-color: #3498db; /* Tambah border-color saat hover */
 }
 .overview-card-top {
     display: flex;
@@ -303,7 +293,7 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: conic-gradient(#3498db var(--progress, 0%), #eee var(--progress, 0%));
+    background: conic-gradient(#3498db var(--progress, 0%), #eee var(--progress, 0%)); /* Dynamic gradient */
 }
 
 /* Recent Orders / Table Section */
@@ -349,7 +339,7 @@ table {
 }
 th, td {
     border: none;
-    font-size: 14px;
+    font-size: 14px; /* Default table font size */
     padding: 12px 15px;
     text-align: left;
 }
@@ -373,17 +363,20 @@ table tbody tr:last-child td {
     border-bottom: none;
 }
 table tbody tr {
-    transition: background-color 0.2s ease, filter 0.2s ease;
+    transition: background-color 0.2s ease, filter 0.2s ease; /* Tambahkan filter ke transisi */
 }
 table tbody tr:hover {
-    background-color: #eaf6ff;
-    filter: brightness(80%);
+    background-color: #eaf6ff; /* Tetap gunakan warna dasar hover */
+    filter: brightness(80%); /* Gelapkan 20% (100% - 20% = 80%) */
 }
+/* Jika Anda ingin hanya teksnya yang lebih gelap, bukan seluruh baris,
+    ini akan lebih rumit dan memerlukan JavaScript untuk menambahkan kelas ke <td>.
+    Namun, permintaan Anda adalah "warna kolom", yang biasanya berarti latar belakang baris. */
 td.nama,
 td.program-studi {
     text-align: left;
 }
-/* Specific font size for tables */
+/* Specific font size for Data Mahasiswa table */
 #dataMahasiswaPage table td,
 #dosenPembimbingPage table td, /* Untuk tabel daftar dosen */
 #mahasiswaBimbinganTable table td { /* Untuk tabel mahasiswa bimbingan */
@@ -397,14 +390,14 @@ td.program-studi {
     color: white;
 }
 /* Gaya untuk status progress skripsi/TA */
-.status-badge.BelumProposal { background-color: #e74c3c; }
-.status-badge.SudahProposal { background-color: #3498db; }
-.status-badge.SeminarHasil { background-color: #9b59b6; }
-.status-badge.Pendadaran { background-color: #2ecc71; }
-.status-badge.BelumUjianKomprehensif { background-color: #e74c3c; }
-.status-badge.SudahUjianKomprehensif { background-color: #3498db; }
-.status-badge.SudahYudisium { background-color: #1abc9c; }
-.status-badge.Other { background-color: #7f8c8d; }
+.status-badge.BelumProposal { background-color: #e74c3c; } /* Merah */
+.status-badge.SudahProposal { background-color: #3498db; } /* Biru */
+.status-badge.SeminarHasil { background-color: #9b59b6; } /* Ungu */
+.status-badge.Pendadaran { background-color: #2ecc71; } /* Hijau */
+.status-badge.BelumUjianKomprehensif { background-color: #e74c3c; } /* Sama dengan Belum Proposal (Merah) */
+.status-badge.SudahUjianKomprehensif { background-color: #3498db; } /* Sama dengan Sudah Proposal (Biru) */
+.status-badge.SudahYudisium { background-color: #1abc9c; } /* Turquoise */
+.status-badge.Other { background-color: #7f8c8d; } /* Abu-abu default untuk status yang tidak terdefinisi */
 
 /* Pagination Button Styling */
 .pagination-button {
@@ -423,8 +416,8 @@ td.program-studi {
     background-color: #f0f0f0;
     color: #3498db;
     border-color: #c0c0c0;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px); /* Sedikit efek naik */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Efek bayangan lebih kuat */
 }
 .pagination-button:disabled {
     background: #f8f8f8;
@@ -433,7 +426,7 @@ td.program-studi {
     box-shadow: none;
 }
 
-/* Filters and Search on Data Mahasiswa Page (dan halaman dosen) */
+/* Filters and Search on Data Mahasiswa Page */
 .filter-bar {
     display: flex;
     gap: 15px;
@@ -462,32 +455,32 @@ td.program-studi {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-    background-color: #fff;
+    background-color: #fff; /* Sedikit mencerah saat fokus */
 }
 
 /* Styles for Collapsed Sidebar */
 body.sidebar-collapsed .sidebar {
     width: 80px;
     padding: 20px 0;
-    align-items: center;
+    align-items: center; /* Center items when collapsed */
 }
 body.sidebar-collapsed .sidebar-logo img {
-    width: 50px;
+    width: 50px; /* Smaller logo image when collapsed */
 }
 body.sidebar-collapsed .nav-item {
-    padding: 10px 0;
-    justify-content: center;
+    padding: 10px 0; /* Adjust padding */
+    justify-content: center; /* Center icons */
 }
 body.sidebar-collapsed .nav-item i {
-    margin-right: 0;
+    margin-right: 0; /* Remove margin right */
 }
 body.sidebar-collapsed .nav-item span {
-    opacity: 0;
-    width: 0;
+    opacity: 0; /* Hide text */
+    width: 0; /* Collapse text width */
     overflow: hidden;
-    display: none;
+    display: none; /* Fully hide the span */
 }
-body.sidebar-collapsed .main-wrapper {
+body.sidebar-collapsed .main-wrapper { /* Adjust main-wrapper margin */
     margin-left: 80px;
     width: calc(100% - 80px);
 }
@@ -515,13 +508,13 @@ body.sidebar-collapsed .main-wrapper {
 }
 
 .dosen-summary-card.total { background-color: #eaf6ff; } /* Biru muda */
-.dosen-summary-card.SudahProposal { background-color: #d1ecf1; } /* Info */
-.dosen-summary-card.SeminarHasil { background-color: #d1ecf1; } /* Ungu muda */
-.dosen-summary-card.Pendadaran { background-color: #d1ecf1; } /* Hijau muda */
-.dosen-summary-card.SudahYudisium { background-color: #d4edda; } /* Biru sangat muda */
 .dosen-summary-card.BelumProposal { background-color: #f8d7da; } /* Merah muda */
 .dosen-summary-card.BelumUjianKomprehensif { background-color: #f8d7da; } /* Merah muda */
-.dosen-summary-card.SudahUjianKomprehensif { background-color: #d1ecf1; } /* Hijau muda */
+.dosen-summary-card.SudahProposal { background-color: #d1ecf1; } /* Info */
+.dosen-summary-card.SeminarHasil { background-color: #d1ecf1; } /* Ungu muda, diganti ke info */
+.dosen-summary-card.Pendadaran { background-color: #d1ecf1; } /* Hijau muda, diganti ke info */
+.dosen-summary-card.SudahUjianKomprehensif { background-color: #d1ecf1; } /* Hijau muda, diganti ke info */
+.dosen-summary-card.SudahYudisium { background-color: #d4edda; } /* Biru sangat muda (success-like) */
 
 
 .dosen-summary-card .label {
@@ -540,9 +533,49 @@ body.sidebar-collapsed .main-wrapper {
     color: #666;
 }
 
+/* Global message container styles */
+.global-message-container {
+    padding: 15px;
+    margin: 20px 30px 0 30px; /* Top margin, horizontal margin matches header */
+    border-radius: 8px;
+    font-weight: 500;
+    text-align: center;
+    display: none; /* Hidden by default */
+    position: relative;
+    z-index: 100; /* Ensure it's on top */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.global-message-container.loading {
+    background-color: #e0f7fa; /* Light blue */
+    color: #00796b; /* Darker blue green */
+    border: 1px solid #00bcd4;
+}
+
+.global-message-container.error {
+    background-color: #ffe0b2; /* Light orange */
+    color: #e65100; /* Darker orange */
+    border: 1px solid #ff9800;
+}
+
+.global-message-container .close-button {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+}
+.global-message-container .close-button:hover {
+    opacity: 0.7;
+}
 
 /* Responsive Media Queries */
 @media screen and (max-width: 1024px) {
+    /* Default collapsed state for smaller desktops/tablets */
     .sidebar {
         width: 80px;
         align-items: center;
@@ -573,11 +606,12 @@ body.sidebar-collapsed .main-wrapper {
     .filter-bar input[type="text"],
     .filter-bar select { min-width: unset; }
 
+    /* Override user-controlled collapse if screen is already small */
     body.sidebar-collapsed .sidebar {
-        width: 80px;
+        width: 80px; /* Remains 80px */
     }
     body.sidebar-collapsed .main-wrapper {
-        margin-left: 80px;
+        margin-left: 80px; /* Remains 80px */
     }
 
     /* Penyesuaian kartu statistik dosen di tablet */
@@ -589,6 +623,10 @@ body.sidebar-collapsed .main-wrapper {
     .dosen-summary-card .value { font-size: 20px; }
     .dosen-summary-card .label { font-size: 11px; }
     .dosen-summary-card .percentage { font-size: 10px; }
+
+    .global-message-container {
+        margin: 15px 20px 0 20px;
+    }
 }
 
 @media screen and (max-width: 768px) {
@@ -602,26 +640,26 @@ body.sidebar-collapsed .main-wrapper {
         padding: 10px 0;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         border-bottom: 1px solid #eee;
-        align-items: center;
+        align-items: center; /* Center items horizontally in row layout */
     }
-    .sidebar-logo { display: none; }
+    .sidebar-logo { display: none; } /* Hide logo on mobile */
     .nav-item { margin: 0 5px; padding: 8px 10px; border-radius: 5px; }
     .nav-item i { margin-right: 5px; }
-    .nav-item span { display: inline; font-size: 12px; }
+    .nav-item span { display: inline; font-size: 12px; } /* Show text for mobile nav */
     .main-wrapper {
         margin-left: 0;
-        padding: 0;
+        padding: 0; /* Remove padding from wrapper */
         width: 100%;
     }
     .main-body {
-        padding: 20px;
+        padding: 20px; /* Apply padding to main-body */
     }
     .header {
         flex-direction: column;
         align-items: flex-start;
         padding: 15px;
         gap: 15px;
-        margin: 15px;
+        margin: 15px; /* Adjust margin for header */
     }
     .header-right {
         width: 100%;
@@ -644,18 +682,19 @@ body.sidebar-collapsed .main-wrapper {
     .filter-bar {
         flex-direction: column;
         gap: 10px;
-        margin: 15px;
+        margin: 15px; /* Adjust margin for filter bar */
     }
     .filter-bar input[type="text"],
     .filter-bar select { width: 100%; }
     th, td { font-size: 11px; padding: 8px; }
     .status-badge { padding: 3px 6px; font-size: 11px; }
 
+    /* Mobile: Sidebar toggle is irrelevant, sidebar is always full-width/row */
     body.sidebar-collapsed .sidebar {
-        width: 100%;
+        width: 100%; /* Stays 100% */
     }
     body.sidebar-collapsed .main-wrapper {
-        margin-left: 0;
+        margin-left: 0; /* Stays 0 */
     }
 
     /* Penyesuaian kartu statistik dosen di mobile */
@@ -670,6 +709,10 @@ body.sidebar-collapsed .main-wrapper {
     .dosen-summary-card .value { font-size: 18px; }
     .dosen-summary-card .label { font-size: 10px; }
     .dosen-summary-card .percentage { font-size: 9px; }
+
+    .global-message-container {
+        margin: 15px;
+    }
 }
 
 @media screen and (max-width: 480px) {
