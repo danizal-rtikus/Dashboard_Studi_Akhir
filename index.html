@@ -18,6 +18,7 @@
         <div class="nav-item active" id="menuDashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></div>
         <div class="nav-item" id="menuDataMahasiswa"><i class="fas fa-users"></i><span>Data Mahasiswa</span></div>
         <div class="nav-item" id="menuDosenPembimbing"><i class="fas fa-chalkboard-teacher"></i><span>Dosen Pembimbing</span></div>
+        <div class="nav-item" id="menuProdiStats"><i class="fas fa-chart-line"></i><span>Statistik Prodi</span></div>
         <div class="nav-item" id="menuAnalytics"><i class="fas fa-chart-pie"></i><span>Grafik</span></div>
         <div class="nav-item" id="menuReport"><i class="fas fa-file-alt"></i><span>Report</span></div>
         <div class="nav-item" id="menuLogout" style="margin-top: auto;"><i class="'fas fa-sign-out-alt'"></i><span> </span></div>
@@ -41,13 +42,13 @@
         </div>
 
         <div class="main-body">
-            <!-- Container untuk pesan global (loading/error) -->
+            <!-- Container for global messages (loading/error) -->
             <div id="globalMessageContainer" class="global-message-container"></div>
 
             <!-- Section Dashboard -->
             <div id="dashboardPage" class="page-section">
                 <div class="overview-cards-grid">
-                    <!-- KARTU 1: Jumlah Mahasiswa Skripsi/TA -->
+                    <!-- CARD 1: Total Thesis/TA Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
@@ -65,7 +66,7 @@
                         </div>
                     </div>
 
-                    <!-- KARTU 2: Jumlah Prodi SI -->
+                    <!-- CARD 2: Total SI Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
@@ -83,7 +84,7 @@
                         </div>
                     </div>
 
-                    <!-- KARTU 3: Jumlah Prodi TI -->
+                    <!-- CARD 3: Total TI Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
@@ -101,7 +102,7 @@
                         </div>
                     </div>
 
-                    <!-- KARTU 4: Jumlah Prodi TMJ -->
+                    <!-- CARD 4: Total TMJ Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
@@ -119,7 +120,7 @@
                         </div>
                     </div>
 
-                    <!-- KARTU 5: Jumlah Prodi KA -->
+                    <!-- CARD 5: Total KA Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
@@ -148,6 +149,29 @@
                 </div>
             </div>
 
+            <!-- START: New Program Study Statistics Section -->
+            <div id="prodiStatsPage" class="page-section" style="display:none;">
+                <div class="filter-bar">
+                    <select id="prodiSelectorForStats">
+                        <option value="all">Pilih Program Studi</option>
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="section">
+                    <h3>Statistik Program Studi: <span id="currentProdiStatsName">Pilih Prodi</span></h3>
+                    <div class="overview-cards-grid" id="prodiSpecificStatsCards">
+                        <!-- Specific program study statistics cards will be loaded here -->
+                        <p style="text-align:center; grid-column: 1 / -1; color:#777;">Silakan pilih program studi dari dropdown di atas untuk melihat statistiknya.</p>
+                    </div>
+                </div>
+                <!-- Optional: If you want to display the student list table here as well -->
+                <!-- <div class="section">
+                    <h3>Daftar Mahasiswa Program Studi: <span id="selectedProdiMahasiswaList"></span></h3>
+                    <div id="prodiMahasiswaTable"></div>
+                </div> -->
+            </div>
+            <!-- END: New Program Study Statistics Section -->
+
             <div id="dataMahasiswaPage" class="page-section" style="display:none;">
                 <div class="filter-bar">
                     <input type="text" id="searchBox" placeholder="Cari Nama/NIM...">
@@ -167,7 +191,7 @@
                     <input type="text" id="searchBoxDosen" placeholder="Cari Nama Dosen...">
                 </div>
                 <div class="section">
-                    <h3>Daftar Dosen Pembimbing</h3>
+                    <h3>Statistik Dosen Pembimbing</h3>
                     <div id="dosenListTable">
                         </div>
                 </div>
@@ -199,19 +223,19 @@
                     <div id="programStudiChart"></div>
                 </div>
                 <div class="section">
-                    <h3>Program Studi - Sistem Informasi</h3>
+                    <h3>Grafik Studi Akhir - Sistem Informasi</h3>
                     <div id="progressStatusChartSI"></div>
                 </div>
                 <div class="section">
-                    <h3>Program Studi - Teknik Informatika</h3>
+                    <h3>Grafik Studi Akhir - Teknik Informatika</h3>
                     <div id="progressStatusChartTI"></div>
                 </div>
                 <div class="section">
-                    <h3>Program Studi - Teknik Multimedia dan Jaringan</h3>
+                    <h3>Grafik Studi Akhir - Teknik Multimedia dan Jaringan</h3>
                     <div id="progressStatusChartTMJ"></div>
                 </div>
                 <div class="section">
-                    <h3>Program Studi - Komputerisasi Akuntansi</h3>
+                    <h3>Grafik Studi Akhir - Komputerisasi Akuntansi</h3>
                     <div id="progressStatusChartKA"></div>
                 </div>
             </div>
