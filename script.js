@@ -1,22 +1,23 @@
 // script.js
 
-// URL API Google Apps Script Anda.
-// PASTIKAN URL INI BENAR DAN SUDAH DI-DEPLOY DENGAN AKSES PUBLIK.
+// Google Apps Script Web App URL.
+// ENSURE THIS URL IS CORRECT AND DEPLOYED WITH PUBLIC ACCESS.
 const appsScriptUrl = 'https://script.google.com/macros/s/AKfycbwLjQRxoemkHfjtcJNa9U4HsxP_egj_jAyefVnV1wIm_r1yewrV25pAUM3FM2JNuwV5/exec';
 
-let originalData = []; // Variabel global untuk menyimpan data asli dari API
-let uniqueDosenNames = []; // Menyimpan daftar nama dosen unik
-let dosenStats = {}; // Menyimpan statistik detail untuk setiap dosen
+let originalData = []; // Global variable to store raw data from the API
+let uniqueDosenNames = []; // Stores a list of unique faculty names
+let dosenStats = {}; // Stores detailed statistics for each faculty member
+let prodiStatsData = {}; // NEW: Stores detailed statistics per program study
 let currentPage = 1;
 const rowsPerPage = 10;
 const fullTableRowsPerPage = 15;
 
-let currentDosenFilter = null; // Menyimpan nama dosen yang sedang difilter untuk halaman mahasiswa bimbingan
+let currentDosenFilter = null; // Stores the currently filtered faculty name for the supervised student page
 
 /**
- * Menampilkan pesan global di bagian atas halaman.
- * @param {string} message - Pesan yang akan ditampilkan.
- * @param {boolean} isError - True jika pesan error, false jika pesan loading/info.
+ * Displays a global message at the top of the page.
+ * @param {string} message - The message to display.
+ * @param {boolean} isError - True if it's an error message, false if it's a loading/info message.
  */
 function showGlobalMessage(message, isError = false) {
     const container = document.getElementById('globalMessageContainer');
@@ -41,7 +42,7 @@ function showGlobalMessage(message, isError = false) {
 }
 
 /**
- * Menghapus pesan global dari tampilan.
+ * Removes the global message from display.
  */
 function clearGlobalMessage() {
     const container = document.getElementById('globalMessageContainer');
@@ -54,9 +55,9 @@ function clearGlobalMessage() {
 
 
 /**
- * Menampilkan halaman yang dipilih dan menyembunyikan halaman lainnya.
- * Juga mengelola status aktif pada sidebar.
- * @param {string} pageId - ID dari elemen halaman yang akan ditampilkan.
+ * Displays the selected page and hides other pages.
+ * Also manages active status in the sidebar.
+ * @param {string} pageId - ID of the page element to display.
  */
 function showPage(pageId) {
     const pages = document.querySelectorAll('.page-section');
@@ -66,33 +67,36 @@ function showPage(pageId) {
     if (contentPage) {
         contentPage.style.display = 'block';
     } else {
-        console.error(`Error: Element halaman dengan ID '${pageId}' tidak ditemukan.`);
+        console.error(`Error: Page element with ID '${pageId}' not found.`);
     }
 
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => item.classList.remove('active', 'open'));
 
-    // Pastikan casing ID menu sesuai dengan HTML
+    // Ensure menu ID casing matches HTML
     const basePageName = pageId.replace('Page', '');
     const capitalizedMenuSuffix = basePageName.charAt(0).toUpperCase() + basePageName.slice(1);
     const menuElementId = 'menu' + capitalizedMenuSuffix;
 
-    // Khusus untuk halaman detail mahasiswa bimbingan, menu Dosen Pembimbing yang aktif
+    // Special handling for supervised student detail page, activate Faculty Advisor menu
     if (pageId === 'mahasiswaBimbinganDetailPage') {
         document.getElementById('menuDosenPembimbing').classList.add('active');
-    } else {
+    } else if (pageId === 'prodiStatsPage') { // If on Program Study Statistics page, activate Program Study Statistics menu
+        document.getElementById('menuProdiStats').classList.add('active');
+    }
+    else {
         const menuElement = document.getElementById(menuElementId);
         if (menuElement) {
             menuElement.classList.add('active');
         } else {
-            console.error(`Error: Elemen menu sidebar dengan ID '${menuElementId}' tidak ditemukan.`);
+            console.error(`Error: Sidebar menu element with ID '${menuElementId}' not found.`);
         }
     }
 
-    // Reset filter dan data terkait saat pindah halaman
-    // Kecuali jika pageId adalah mahasiswaBimbinganDetailPage (karena currentDosenFilter akan digunakan)
+    // Reset filters and related data when changing pages
+    // Except if the pageId is mahasiswaBimbinganDetailPage (because currentDosenFilter will be used)
     if (pageId !== 'mahasiswaBimbinganDetailPage') {
-        currentDosenFilter = null; // Reset filter dosen
+        currentDosenFilter = null; // Reset faculty filter
         const searchBoxBimbingan = document.getElementById('searchBoxBimbingan');
         const statusFilterBimbingan = document.getElementById('statusFilterBimbingan');
         if (searchBoxBimbingan) searchBoxBimbingan.value = '';
@@ -102,7 +106,7 @@ function showPage(pageId) {
         if(backButtonFromBimbingan) backButtonFromBimbingan.style.display = 'none';
     }
 
-    // Reset pencarian dosen di halaman daftar dosen saat pindah dari halaman itu
+    // Reset faculty search on faculty list page when moving from that page
     if (pageId !== 'dosenPembimbingPage') {
         const searchBoxDosen = document.getElementById('searchBoxDosen');
         if (searchBoxDosen) {
@@ -110,24 +114,47 @@ function showPage(pageId) {
         }
     }
 
-    currentPage = 1; // Reset halaman pagination setiap kali ganti halaman
+    // NEW: Reset program study dropdown on program study statistics page when moving from that page
+    if (pageId !== 'prodiStatsPage') {
+        const prodiSelector = document.getElementById('prodiSelectorForStats');
+        if (prodiSelector) {
+            prodiSelector.value = 'all'; // Reset to "Select Program Study"
+            // Clear cards and display initial message
+            const cardsContainer = document.getElementById('prodiSpecificStatsCards');
+            if (cardsContainer) {
+                cardsContainer.innerHTML = '<p style="text-align:center; grid-column: 1 / -1; color:#777;">Silakan pilih program studi dari dropdown di atas untuk melihat statistiknya.</p>';
+                document.getElementById('currentProdiStatsName').innerText = 'Pilih Prodi'; // Reset title
+            }
+        }
+    }
+
+
+    currentPage = 1; // Reset pagination page every time page changes
 }
 
-// Event Klik Sidebar
+// Sidebar Click Events
 document.getElementById('menuDashboard').addEventListener('click', function() {
     showPage('dashboardPage');
 });
 document.getElementById('menuDataMahasiswa').addEventListener('click', function() {
     showPage('dataMahasiswaPage');
 });
-// Event listener untuk menu Dosen Pembimbing (langsung menampilkan daftar dosen)
+// Event listener for Faculty Advisor menu (directly displays faculty list)
 document.getElementById('menuDosenPembimbing').addEventListener('click', function() {
     showPage('dosenPembimbingPage');
-    updateDashboard(); // Memuat daftar dosen saat halaman dibuka
+    updateDashboard(); // Load faculty list when page opens
 });
+// START: Event listener for new Program Study Statistics menu
+document.getElementById('menuProdiStats').addEventListener('click', function() {
+    showPage('prodiStatsPage');
+    // Do not directly call updateDashboard, let the dropdown trigger card rendering
+    // Just ensure program study dropdown is populated and initial message is displayed
+    populateProdiSelectorForStats();
+});
+// END: Event listener for new Program Study Statistics menu
 document.getElementById('menuAnalytics').addEventListener('click', function() {
     showPage('analyticsPage');
-    updateDashboard(); // Pastikan grafik di-render ulang
+    updateDashboard(); // Ensure charts are re-rendered
 });
 document.getElementById('menuReport').addEventListener('click', function() {
     showPage('reportPage');
@@ -137,14 +164,14 @@ document.getElementById('showAllMahasiswa').addEventListener('click', function(e
     showPage('dataMahasiswaPage');
 });
 
-// Event listener untuk tombol kembali dari halaman detail mahasiswa bimbingan
+// Event listener for back button from supervised student details page
 document.getElementById('backToDosenListFromBimbinganBtn').addEventListener('click', function() {
-    showPage('dosenPembimbingPage'); // Kembali ke halaman daftar dosen
-    updateDashboard(); // Perbarui halaman daftar dosen
+    showPage('dosenPembimbingPage'); // Go back to faculty list page
+    updateDashboard(); // Update faculty list page
 });
 
 
-// Menampilkan tanggal saat ini di header
+// Displays current date in the header
 function displayCurrentDate() {
     const now = new Date();
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
@@ -152,12 +179,12 @@ function displayCurrentDate() {
 }
 
 /**
- * Mengambil data dari Google Apps Script Web App URL.
- * Menangani potensi error dari operasi fetch atau respons Apps Script.
+ * Fetches data from Google Apps Script Web App URL.
+ * Handles potential errors from fetch operation or Apps Script response.
  */
 async function loadDataFromAppsScript() {
-    clearGlobalMessage(); // Hapus pesan sebelumnya (error/loading)
-    showGlobalMessage('Memuat data, mohon tunggu...', false); // Tampilkan pesan loading
+    clearGlobalMessage(); // Clear previous messages (error/loading)
+    showGlobalMessage('Memuat data, mohon tunggu...', false); // Display loading message
 
     try {
         const response = await fetch(appsScriptUrl);
@@ -166,7 +193,7 @@ async function loadDataFromAppsScript() {
         if (result.error) {
             console.error('Error from Apps Script:', result.error);
             showGlobalMessage(`Gagal memuat data: ${result.error}. Pastikan URL Apps Script benar dan dapat diakses.`, true);
-            // Hapus pesan error dari tabel individu karena sudah ada pesan global
+            // Clear error messages from individual tables as a global message is now present
             document.getElementById("recentMahasiswaTable").innerHTML = `<p style='text-align:center; color:red;'>Gagal memuat data.</p>`;
             document.getElementById("detailTable").innerHTML = `<p style='text-align:center; color:red;'>Gagal memuat data.</p>`;
             document.getElementById("dosenListTable").innerHTML = `<p style='text-align:center; color:red;'>Gagal memuat daftar dosen.</p>`;
@@ -176,11 +203,12 @@ async function loadDataFromAppsScript() {
 
         if (result.data) {
             originalData = result.data;
-            // Ekstrak nama dosen unik dan hitung statistik dosen
+            // Extract unique faculty names and calculate faculty statistics
             const dosenSet = new Set();
             const tempDosenStats = {};
+            const tempProdiStatsData = {}; // NEW: Object to store statistics per program study
 
-            const allPossibleStatuses = [ // Status lengkap untuk perhitungan awal
+            const allPossibleStatuses = [ // Complete list of statuses for initial calculation
                 "Belum Proposal", "Sudah Proposal", "Seminar Hasil", "Pendadaran",
                 "Belum Ujian Komprehensif", "Sudah Ujian Komprehensif", "Sudah Yudisium"
             ];
@@ -189,7 +217,9 @@ async function loadDataFromAppsScript() {
                 const p1 = d["Usulan Komisi SI (P1)"];
                 const p2 = d["Usulan Komisi (P2)"];
                 const status = d.Status || "Other"; // Default status
+                const prodi = d["Program Studi"] || "Other"; // Get student's program study
 
+                // Calculate Faculty Statistics
                 const relevantDosen = [];
                 if (p1) relevantDosen.push(p1);
                 if (p2 && p2 !== p1) relevantDosen.push(p2);
@@ -207,22 +237,37 @@ async function loadDataFromAppsScript() {
                         tempDosenStats[dosenName]["Other"]++;
                     }
                 });
-                // Juga tambahkan nama dosen ke set global untuk daftar unik
+                // Also add faculty names to the global set for unique list
                 if (p1) dosenSet.add(p1);
                 if (p2) dosenSet.add(p2);
+
+                // NEW: Calculate Program Study Statistics
+                if (!tempProdiStatsData[prodi]) {
+                    tempProdiStatsData[prodi] = { total: 0 };
+                    allPossibleStatuses.forEach(s => tempProdiStatsData[prodi][s] = 0);
+                    tempProdiStatsData[prodi]["Other"] = 0;
+                }
+                tempProdiStatsData[prodi].total++;
+                if (tempProdiStatsData[prodi].hasOwnProperty(status)) {
+                    tempProdiStatsData[prodi][status]++;
+                } else {
+                    tempProdiStatsData[prodi]["Other"]++;
+                }
             });
 
             uniqueDosenNames = Array.from(dosenSet).sort();
-            dosenStats = tempDosenStats; // Simpan statistik lengkap
+            dosenStats = tempDosenStats; // Store complete faculty statistics
+            prodiStatsData = tempProdiStatsData; // NEW: Store complete program study statistics
 
             populateProdiFilter(originalData);
             populateStatusFilter(originalData);
             populateStatusFilterBimbingan(originalData);
-            updateDashboard(); // Memperbarui seluruh dashboard dengan data yang baru dimuat
-            clearGlobalMessage(); // Data berhasil dimuat, hapus pesan loading
+            populateProdiSelectorForStats(); // NEW: Populate dropdown on Program Study Statistics page
+            updateDashboard(); // Update the entire dashboard with the newly loaded data
+            clearGlobalMessage(); // Data loaded successfully, clear loading message
         } else {
             console.warn('No data received from Apps Script.');
-            showGlobalMessage('Tidak ada data yang ditemukan.', false); // Pesan info, bukan error
+            showGlobalMessage('Tidak ada data yang ditemukan.', false); // Info message, not error
             document.getElementById("recentMahasiswaTable").innerHTML = `<p style='text-align:center; color:gray;'>Tidak ada data ditemukan.</p>`;
             document.getElementById("detailTable").innerHTML = `<p style='text-align:center; color:gray;'>Tidak ada data ditemukan.</p>`;
             document.getElementById("dosenListTable").innerHTML = `<p style='text-align:center; color:gray;'>Tidak ada dosen ditemukan.</p>`;
@@ -232,7 +277,6 @@ async function loadDataFromAppsScript() {
     } catch (error) {
         console.error('Error fetching data from Apps Script:', error);
         showGlobalMessage(`Gagal memuat data: ${error.message}. Pastikan URL Apps Script benar dan dapat diakses.`, true);
-        // Hapus pesan error dari tabel individu karena sudah ada pesan global
         document.getElementById("recentMahasiswaTable").innerHTML = `<p style='text-align:center; color:red;'>Gagal memuat data.</p>`;
         document.getElementById("detailTable").innerHTML = `<p style='text-align:center; color:red;'>Gagal memuat data.</p>`;
         document.getElementById("dosenListTable").innerHTML = `<p style='text-align:center; color:red;'>Gagal memuat daftar dosen.</p>`;
@@ -241,8 +285,8 @@ async function loadDataFromAppsScript() {
 }
 
 /**
- * Mengisi dropdown filter Program Studi.
- * @param {Array<Object>} data - Data mahasiswa.
+ * Populates the Program Study filter dropdown.
+ * @param {Array<Object>} data - Student data.
  */
 function populateProdiFilter(data) {
     const prodiSet = new Set(data.map(d => d["Program Studi"]).filter(Boolean));
@@ -257,8 +301,41 @@ function populateProdiFilter(data) {
 }
 
 /**
- * Mengisi dropdown filter Status.
- * @param {Array<Object>} data - Data mahasiswa.
+ * NEW: Populates the program study dropdown for the Program Study Statistics page.
+ */
+function populateProdiSelectorForStats() {
+    const prodiSelector = document.getElementById('prodiSelectorForStats');
+    if (!prodiSelector) return;
+
+    // Clear old options except "Select Program Study"
+    prodiSelector.innerHTML = '<option value="all">Pilih Program Studi</option>';
+    
+    // Get unique program study list from calculated data (prodiStatsData)
+    const uniqueProdi = Object.keys(prodiStatsData).sort();
+
+    uniqueProdi.forEach(prodiName => {
+        const option = document.createElement('option');
+        option.value = prodiName;
+        option.textContent = prodiName;
+        prodiSelector.appendChild(option);
+    });
+
+    // Add event listener when selection changes
+    prodiSelector.onchange = function() {
+        const selectedProdi = this.value;
+        if (selectedProdi === 'all') {
+            document.getElementById('prodiSpecificStatsCards').innerHTML = '<p style="text-align:center; grid-column: 1 / -1; color:#777;">Silakan pilih program studi dari dropdown di atas untuk melihat statistiknya.</p>';
+            document.getElementById('currentProdiStatsName').innerText = 'Pilih Prodi';
+        } else {
+            document.getElementById('currentProdiStatsName').innerText = selectedProdi;
+            renderProdiSpecificStatsCards(selectedProdi);
+        }
+    };
+}
+
+/**
+ * Populates the Status filter dropdown.
+ * @param {Array<Object>} data - Student data.
  */
 function populateStatusFilter(data) {
     const statusSet = new Set(data.map(d => d.Status).filter(Boolean));
@@ -273,8 +350,8 @@ function populateStatusFilter(data) {
 }
 
 /**
- * Mengisi dropdown filter Status untuk halaman mahasiswaBimbinganDetailPage.
- * @param {Array<Object>} data - Data mahasiswa.
+ * Populates the Status filter dropdown for the supervised student details page.
+ * @param {Array<Object>} data - Student data.
  */
 function populateStatusFilterBimbingan(data) {
     const statusSet = new Set(data.map(d => d.Status).filter(Boolean));
@@ -289,8 +366,8 @@ function populateStatusFilterBimbingan(data) {
 }
 
 /**
- * Memperbarui tabel daftar dosen (di dosenPembimbingPage).
- * Ini akan menampilkan tabel dosen yang bisa diklik.
+ * Updates the faculty list table (on dosenPembimbingPage).
+ * This will display a clickable table of faculty members.
  */
 function updateDosenListTable() {
     const tableContainer = document.getElementById('dosenListTable');
@@ -324,30 +401,30 @@ function updateDosenListTable() {
     tableHTML += `</tbody></table>`;
     tableContainer.innerHTML = tableHTML;
 
-    // Tambahkan event listener untuk setiap baris dosen
+    // Add event listener to each faculty row
     const dosenRows = tableContainer.querySelectorAll('tbody tr');
     dosenRows.forEach(row => {
         row.addEventListener('click', function() {
             const dosenName = this.dataset.dosenName;
-            currentDosenFilter = dosenName; // Set filter dosen global
-            document.getElementById('currentDosenName').innerText = dosenName; // Update heading di halaman detail
-            showPage('mahasiswaBimbinganDetailPage'); // Tampilkan halaman detail mahasiswa bimbingan
-            updateDashboard(); // Perbarui dashboard untuk menampilkan mahasiswa bimbingan dosen tersebut
-            document.getElementById('backToDosenListFromBimbinganBtn').style.display = 'block'; // Tampilkan tombol kembali
+            currentDosenFilter = dosenName; // Set global faculty filter
+            document.getElementById('currentDosenName').innerText = dosenName; // Update heading on detail page
+            showPage('mahasiswaBimbinganDetailPage'); // Display supervised student details page
+            updateDashboard(); // Update dashboard to display supervised students for this faculty member
+            document.getElementById('backToDosenListFromBimbinganBtn').style.display = 'block'; // Display back button
         });
     });
 }
 
 
 /**
- * Merender kartu statistik dosen di halaman mahasiswaBimbinganDetailPage.
- * @param {string} dosenName - Nama dosen yang statistik bimbingannya akan ditampilkan.
+ * Renders faculty statistics cards on the mahasiswaBimbinganDetailPage.
+ * @param {string} dosenName - Name of the faculty member whose supervision statistics will be displayed.
  */
 function renderDosenStatsCards(dosenName) {
     const cardsContainer = document.getElementById('dosenStatsCards');
     if (!cardsContainer) return;
 
-    cardsContainer.innerHTML = ''; // Bersihkan kartu lama
+    cardsContainer.innerHTML = ''; // Clear old cards
 
     const stats = dosenStats[dosenName] || {};
     const totalBimbingan = stats.total || 0;
@@ -357,16 +434,16 @@ function renderDosenStatsCards(dosenName) {
         { label: "Belum Proposal", key: "Belum Proposal", icon: "fas fa-times-circle" },
         { label: "Belum Ujian Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-times-circle" },
         { label: "Sudah Proposal", key: "Sudah Proposal", icon: "fas fa-check-circle" },
-        { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-check-circle" },
-        { label: "Pendadaran", key: "Pendadaran", icon: "fas fa-check-circle" },
-        { label: "Sudah Ujian Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-check-circle" },
-        { label: "Sudah Yudisium", key: "Sudah Yudisium", icon: "fas fa-graduation-cap" }
+        { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-clipboard-check" },
+        { label: "Pendadaran", key: "Pendadaran", icon: "fas fa-graduation-cap" },
+        { label: "Sudah Ujian Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-trophy" },
+        { label: "Sudah Yudisium", key: "Sudah Yudisium", icon: "fas fa-award" }
     ];
         
     statOrder.forEach(stat => {
         const value = stats[stat.key] || 0;
         const percentage = totalBimbingan > 0 ? ((value / totalBimbingan) * 100).toFixed(1) : 0;
-        const cardClass = stat.key.replace(/\s/g, ''); // Hapus spasi untuk kelas CSS
+        const cardClass = stat.key.replace(/\s/g, ''); // Remove spaces for CSS class
 
         const cardHtml = `
             <div class="dosen-summary-card ${cardClass}">
@@ -381,8 +458,79 @@ function renderDosenStatsCards(dosenName) {
 
 
 /**
- * Memperbarui statistik overview di dashboard dan circular progress.
- * @param {Array<Object>} data - Data mahasiswa yang sudah difilter.
+ * NEW: Renders specific statistics cards for the selected program study.
+ * @param {string} prodiName - Name of the program study whose statistics will be displayed.
+ */
+function renderProdiSpecificStatsCards(prodiName) {
+    const cardsContainer = document.getElementById('prodiSpecificStatsCards');
+    if (!cardsContainer) return;
+
+    cardsContainer.innerHTML = ''; // Clear old cards
+
+    const stats = prodiStatsData[prodiName] || {}; // Get statistics data from prodiStatsData
+
+    const totalMahasiswaProdi = stats.total || 0;
+
+    // Define order and labels of cards according to program study
+    let statOrder = [];
+    // Common icon for these cards
+    const commonIcon = "fas fa-users";
+    // Define common card background colors
+    const commonCardColors = {
+        "total": "#eaf6ff", // Light blue
+        "Belum Proposal": "#f8d7da", // Light red
+        "Sudah Proposal": "#d1ecf1", // Info (light cyan)
+        "Seminar Hasil": "#d1ecf1",
+        "Pendadaran": "#d1ecf1",
+        "Belum Ujian Komprehensif": "#f8d7da",
+        "Sudah Ujian Komprehensif": "#d1ecf1",
+        "Sudah Yudisium": "#d4edda" // Success (light green)
+    };
+
+    if (['Sistem Informasi', 'Teknik Informatika', 'Teknik Multimedia dan Jaringan'].includes(prodiName)) {
+        statOrder = [
+            { label: `Jumlah Mahasiswa Skripsi`, key: "total", icon: commonIcon },
+            { label: "Belum Proposal", key: "Belum Proposal", icon: "fas fa-times-circle" },
+            { label: "Proposal", key: "Sudah Proposal", icon: "fas fa-check-circle" },
+            { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-check-circle" },
+            { label: "Pendadaran", key: "Pendadaran", icon: "fas fa-check-circle" },
+            { label: "Yudisium", key: "Sudah Yudisium", icon: "fas fa-graduation-cap" }
+        ];
+    } else if (prodiName === 'Komputerisasi Akuntansi') {
+        statOrder = [
+            { label: `Jumlah Mahasiswa Tugas Akhir`, key: "total", icon: commonIcon },
+            { label: "Belum Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-times-circle" },
+            { label: "Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-check-circle" },
+            { label: "Yudisium", key: "Sudah Yudisium", icon: "fas fa-graduation-cap" }
+        ];
+    } else {
+        cardsContainer.innerHTML = `<p style="text-align:center; grid-column: 1 / -1; color:#777;">Statistik untuk program studi ini belum tersedia.</p>`;
+        return;
+    }
+
+    statOrder.forEach(stat => {
+        const value = stats[stat.key] || 0;
+        const percentage = totalMahasiswaProdi > 0 ? ((value / totalMahasiswaProdi) * 100).toFixed(1) : 0;
+        const cardClass = stat.key.replace(/\s/g, ''); // Remove spaces for CSS class
+
+        // Use custom color from commonCardColors if available, default to #f8f9fa
+        const backgroundColor = commonCardColors[stat.key] || '#f8f9fa';
+
+        const cardHtml = `
+            <div class="dosen-summary-card ${cardClass}" style="background-color: ${backgroundColor};">
+                <div class="label"><i class="${stat.icon}"></i> ${stat.label}</div>
+                <div class="value">${value}</div>
+                <div class="percentage">${percentage}%</div>
+            </div>
+        `;
+        cardsContainer.innerHTML += cardHtml;
+    });
+}
+
+
+/**
+ * Updates overview statistics on the dashboard and circular progress bars.
+ * @param {Array<Object>} data - Filtered student data.
  */
 function updateStats(data) {
     const totalMahasiswaSkripsiTA = data.length;
@@ -415,12 +563,37 @@ function updateStats(data) {
     document.getElementById("jumlahProdiTIChange").innerText = `${prodiTIPercent}%`;
     document.getElementById("jumlahProdiTMJChange").innerText = `${prodiTMJPercent}%`;
     document.getElementById("jumlahProdiKAChange").innerText = `${prodiKAPercent}%`;
+    
+    // NEW: Update stats for the duplicated section in prodiStatsPage as well
+    const prodiStatsPage = document.getElementById('prodiStatsPage');
+    // Only update standard overview cards on prodiStatsPage if no specific program study is selected in the dropdown
+    const prodiSelector = document.getElementById('prodiSelectorForStats');
+    if (prodiStatsPage && prodiStatsPage.style.display === 'block' && prodiSelector && prodiSelector.value === 'all') {
+        document.getElementById("totalMahasiswaSkripsiTA_prodiStats").innerText = totalMahasiswaSkripsiTA;
+        document.getElementById("jumlahProdiSI_prodiStats").innerText = prodiSISet;
+        document.getElementById("jumlahProdiTI_prodiStats").innerText = prodiTISet;
+        document.getElementById("jumlahProdiTMJ_prodiStats").innerText = prodiTMJSet;
+        document.getElementById("jumlahProdiKA_prodiStats").innerText = prodiKASet;
+
+        updateCircularProgress('totalMahasiswaSkripsiTAProgress_prodiStats', totalMahasiswaSkripsiTAPercent);
+        updateCircularProgress('jumlahProdiSIProgress_prodiStats', prodiSIPercent);
+        updateCircularProgress('jumlahProdiTIProgress_prodiStats', prodiTIPercent);
+        updateCircularProgress('jumlahProdiTMJProgress_prodiStats', prodiTMJPercent);
+        updateCircularProgress('jumlahProdiKAProgress_prodiStats', prodiKAPercent);
+
+        document.getElementById("totalMahasiswaSkripsiTAChange_prodiStats").innerText = `${totalMahasiswaSkripsiTAPercent}%`;
+        document.getElementById("jumlahProdiSIChange_prodiStats").innerText = `${prodiSIPercent}%`;
+        document.getElementById("jumlahProdiTIChange_prodiStats").innerText = `${prodiTIPercent}%`;
+        document.getElementById("jumlahProdiTMJChange_prodiStats").innerText = `${prodiTMJPercent}%`;
+        document.getElementById("jumlahProdiKAChange_prodiStats").innerText = `${prodiKAPercent}%`;
+    }
 }
 
+
 /**
- * Memperbarui bilah progress melingkar berbasis CSS.
- * @param {string} elementId - ID elemen teks bagian dalam.
- * @param {number} percentage - Nilai persentase (0-100).
+ * Updates the circular progress bar based on CSS.
+ * @param {string} elementId - ID of the inner text element.
+ * @param {number} percentage - Percentage value (0-100).
  */
 function updateCircularProgress(elementId, percentage) {
     const innerTextElement = document.getElementById(elementId);
@@ -436,12 +609,12 @@ function updateCircularProgress(elementId, percentage) {
 
 
 /**
- * Memperbarui tabel detail mahasiswa.
- * @param {Array<Object>} data - Data mahasiswa yang sudah difilter.
- * @param {string} targetElementId - ID elemen div untuk menempatkan tabel.
- * @param {number} limit - Jumlah baris yang akan ditampilkan (untuk order terbaru).
- * @param {boolean} showPagination - Apakah akan menampilkan tombol paginasi.
-*/
+ * Updates the detailed student table.
+ * @param {Array<Object>} data - Filtered student data.
+ * @param {string} targetElementId - ID of the div element to place the table in.
+ * @param {number} limit - Number of rows to display (for latest orders).
+ * @param {boolean} showPagination - Whether to display pagination buttons.
+ */
 function updateTable(data, targetElementId, limit = null, showPagination = true) {
     const tableContainer = document.getElementById(targetElementId);
     if (!tableContainer) return;
@@ -453,7 +626,7 @@ function updateTable(data, targetElementId, limit = null, showPagination = true)
 
     let dataToRender = data;
     let currentRowsPerPage = rowsPerPage;
-    // Terapkan fullTableRowsPerPage hanya untuk tabel detail mahasiswa dan mahasiswa bimbingan
+    // Apply fullTableRowsPerPage only for student detail table and supervised student table
     if (targetElementId === 'detailTable' || targetElementId === 'mahasiswaBimbinganTable') {
         currentRowsPerPage = fullTableRowsPerPage;
     }
@@ -536,7 +709,7 @@ function updateTable(data, targetElementId, limit = null, showPagination = true)
     tableContainer.innerHTML = tableHTML;
 }
 
-// Global pagination functions - disesuaikan agar selalu memanggil updateDashboard
+// Global pagination functions - adjusted to always call updateDashboard
 function nextPage() {
     currentPage++;
     updateDashboard();
@@ -549,10 +722,10 @@ function prevPage() {
 
 
 /**
- * Menghasilkan tabel statistik berdasarkan Program Studi.
- * Tabel berisi Jumlah Student Body, dan status progress skripsi/TA, diurutkan berdasarkan Student Body terbanyak.
- * @param {Array<Object>} data - Data mahasiswa.
- * @param {string} targetElementId - ID elemen div untuk menempatkan tabel.
+ * Generates a statistics table based on Program Study.
+ * The table contains Total Student Body, and Thesis/TA progress status, sorted by most students.
+ * @param {Array<Object>} data - Student data.
+ * @param {string} targetElementId - ID of the div element to place the table in.
  */
 function generateProdiStatsTable(data, targetElementId) {
     const tableContainer = document.getElementById(targetElementId);
@@ -640,20 +813,20 @@ function generateProdiStatsTable(data, targetElementId) {
 
 
 /**
- * Memperbarui semua chart di bagian Analytics.
- * @param {Array<Object>} data - Data mahasiswa yang sudah difilter.
+ * Updates all charts in the Analytics section.
+ * @param {Array<Object>} data - Filtered student data.
  */
 function updateCharts(data) {
-    // Definisi warna khusus untuk Populasi Program Studi
+    // Custom color definitions for Program Study Population
     const prodiColorsMapping = {
-        "Sistem Informasi": '#3498db', // Biru
-        "Teknik Informatika": '#f39c12', // Oranye
-        "Komputerisasi Akuntansi": '#2ecc71', // Hijau
-        "Teknik Multimedia dan Jaringan": '#9b59b6' // Ungu
+        "Sistem Informasi": '#3498db', // Blue
+        "Teknik Informatika": '#f39c12', // Orange
+        "Komputerisasi Akuntansi": '#2ecc71', // Green
+        "Teknik Multimedia dan Jaringan": '#9b59b6' // Purple
     };
     generatePieChart(countOccurrences(data, 'Program Studi'), 'programStudiChart', 'Grafik Mahasiswa Studi Akhir', prodiColorsMapping);
     
-    // Grafik Progres per Program Studi (Pie Chart)
+    // Progress charts per Program Study (Pie Chart)
     const dataSI = data.filter(d => d["Program Studi"] === "Sistem Informasi");
     generateProdiProgressPieChart(dataSI, "Sistem Informasi", 'progressStatusChartSI', 'Program Studi - Sistem Informasi', [
         "Belum Proposal", "Sudah Proposal", "Seminar Hasil", "Pendadaran", "Sudah Yudisium"
@@ -676,10 +849,10 @@ function updateCharts(data) {
 }
 
 /**
- * Menghitung frekuensi kemunculan nilai dalam kolom tertentu.
- * @param {Array<Object>} data - Data mahasiswa.
- * @param {string} key - Kunci kolom yang akan dihitung.
- * @returns {Object} - Objek berisi hitungan kemunculan.
+ * Counts occurrences of values in a given column.
+ * @param {Array<Object>} data - Student data.
+ * @param {string} key - The column key to count.
+ * @returns {Object} - Object containing occurrence counts.
  */
 function countOccurrences(data, key) {
     return data.reduce((acc, row) => {
@@ -690,14 +863,15 @@ function countOccurrences(data, key) {
 }
 
 /**
- * Mendapatkan data yang sudah difilter berdasarkan halaman yang aktif.
- * @returns {Array<Object>} - Data yang sudah difilter.
+ * Gets filtered student data based on the active page.
+ * @returns {Array<Object>} - Filtered student data.
  */
 function getFilteredData() {
     const dataMahasiswaPage = document.getElementById('dataMahasiswaPage');
     const dosenPembimbingPage = document.getElementById('dosenPembimbingPage');
     const mahasiswaBimbinganDetailPage = document.getElementById('mahasiswaBimbinganDetailPage');
     const analyticsPage = document.getElementById('analyticsPage');
+    const prodiStatsPage = document.getElementById('prodiStatsPage');
 
     if (dataMahasiswaPage.style.display === 'block') {
         const keyword = document.getElementById('searchBox').value.toLowerCase();
@@ -728,13 +902,15 @@ function getFilteredData() {
         return originalData;
     } else if (dosenPembimbingPage.style.display === 'block') {
         return originalData;
+    } else if (prodiStatsPage.style.display === 'block') {
+        return originalData;
     }
     return originalData;
 }
 
 /**
- * Memperbarui seluruh bagian dashboard (statistik, tabel, dan chart)
- * berdasarkan halaman yang aktif.
+ * Updates all parts of the dashboard (statistics, tables, and charts)
+ * based on the active page.
  */
 function updateDashboard() {
     const dashboardPage = document.getElementById('dashboardPage');
@@ -742,6 +918,7 @@ function updateDashboard() {
     const dosenPembimbingPage = document.getElementById('dosenPembimbingPage');
     const mahasiswaBimbinganDetailPage = document.getElementById('mahasiswaBimbinganDetailPage');
     const analyticsPage = document.getElementById('analyticsPage');
+    const prodiStatsPage = document.getElementById('prodiStatsPage');
 
     const filteredDataForContext = getFilteredData();
 
@@ -759,10 +936,17 @@ function updateDashboard() {
         }
     } else if (analyticsPage.style.display === 'block') {
         updateCharts(filteredDataForContext);
+    } else if (prodiStatsPage.style.display === 'block') {
+        // updateStats(filteredDataForContext); // Cards on this page are filled by renderProdiSpecificStatsCards
+        generateProdiStatsTable(filteredDataForContext, 'recentMahasiswaTable_prodiStats'); // Update table in the duplicated section
+        const prodiSelector = document.getElementById('prodiSelectorForStats');
+        if (prodiSelector && prodiSelector.value !== 'all') {
+            renderProdiSpecificStatsCards(prodiSelector.value);
+        }
     }
 }
 
-// Inisialisasi saat halaman dimuat
+// Initialization when the page loads
 window.onload = function() {
     displayCurrentDate();
     loadDataFromAppsScript();
@@ -791,35 +975,50 @@ window.onload = function() {
         document.body.classList.toggle('sidebar-collapsed');
     });
 
+    // Event listener for showAllMahasiswa_prodiStats
+    const showAllMahasiswaProdiStats = document.getElementById('showAllMahasiswa_prodiStats');
+    if (showAllMahasiswaProdiStats) {
+        showAllMahasiswaProdiStats.addEventListener('click', function(e) {
+            e.preventDefault();
+            showPage('dataMahasiswaPage'); // Redirect to main Student Data page
+            // Optional: set program study filter if you want to display all students from a specific program study when clicked from program study statistics
+            // const selectedProdiFromStats = document.getElementById('prodiSelectorForStats').value;
+            // if (selectedProdiFromStats !== 'all') {
+            //     document.getElementById('prodiFilter').value = selectedProdiFromStats;
+            // }
+            // currentPage = 1; updateDashboard();
+        });
+    }
+
     showPage('dashboardPage');
 };
 
 // --- Plotly Chart Functions ---
 
 /**
- * Menghasilkan grafik pie menggunakan Plotly.
- * Fungsi ini digunakan untuk grafik Populasi Program Studi.
- * @param {Object} dataCounts - Objek berisi hitungan kategori (label: count).
- * @param {string} targetElementId - ID elemen div untuk menempatkan grafik.
- * @param {string} title - Judul grafik.
- * @param {Object} [colorMapping] - Opsional: Objek mapping nama label ke kode warna.
+ * Generates a pie chart using Plotly.
+ * This function is used for the Program Study Population chart.
+ * @param {Object} dataCounts - Object containing category counts (label: count).
+ * @param {string} targetElementId - ID of the div element to place the chart in.
+ * @param {string} title - Chart title.
+ * @param {Object} [colorMapping] - Optional: Object mapping label names to color codes.
  */
 function generatePieChart(dataCounts, targetElementId, title, colorMapping = {}) {
     const labels = Object.keys(dataCounts);
     const values = Object.values(dataCounts);
 
-    // Tentukan warna berdasarkan mapping atau warna default Plotly
+    // Determine colors based on mapping or default Plotly colors
     const colors = labels.map(label => {
         if (colorMapping[label]) {
             return colorMapping[label];
         }
-        // Warna default jika tidak ada di mapping
+        // Default colors if not in mapping
         switch (label) {
-            case "Sistem Informasi": return '#3498db'; // Biru (fallback)
-            case "Teknik Informatika": return '#f39c12'; // Oranye (fallback)
-            case "Komputerisasi Akuntansi": return '#2ecc71'; // Hijau (fallback)
-            case "Teknik Multimedia dan Jaringan": return '#9b59b6'; // Ungu (fallback)
-            default: return '#7f8c8d'; // Abu-abu default
+            case "Sistem Informasi": return '#3498db'; // Blue (fallback)
+            case "Teknik Informatika": return '#f39c12'; // Orange (fallback)
+            case "Komputerisasi Akuntansi": return '#2ecc71'; // Green (fallback)
+            case "Teknik Multimedia dan Jaringan": return '#9b59b6'; // Purple (fallback)
+            default: return '#7f8c8d'; // Default gray
         }
     });
 
@@ -831,7 +1030,7 @@ function generatePieChart(dataCounts, targetElementId, title, colorMapping = {})
         textinfo: 'percent',
         insidetextorientation: 'radial',
         marker: {
-            colors: colors // Gunakan array warna yang sudah ditentukan
+            colors: colors // Use the determined color array
         },
         automargin: true
     }];
@@ -863,12 +1062,13 @@ function generatePieChart(dataCounts, targetElementId, title, colorMapping = {})
 
 
 /**
- * Menghasilkan grafik pie untuk progres mahasiswa per tahap, khusus untuk per prodi.
- * @param {Array<Object>} data - Data mahasiswa yang sudah difilter untuk prodi tertentu.
- * @param {string} prodiName - Nama program studi.
- * @param {string} targetElementId - ID elemen div untuk menempatkan grafik.
- * @param {string} title - Judul grafik.
- * @param {Array<string>} specificStatuses - Array status yang spesifik untuk prodi ini (status asli dari data).
+ * Generates a pie chart for student progress per stage, specifically for each program study.
+ * This function replaces generateProdiProgressChart (bar chart).
+ * @param {Array<Object>} data - Student data filtered for a specific program study.
+ * @param {string} prodiName - Program study name.
+ * @param {string} targetElementId - ID of the div element to place the chart in.
+ * @param {string} title - Chart title.
+ * @param {Array<string>} specificStatuses - Array of specific statuses for this program study (original status names from data).
  */
 function generateProdiProgressPieChart(data, prodiName, targetElementId, title, specificStatuses) {
     const statusCounts = {};
@@ -876,55 +1076,55 @@ function generateProdiProgressPieChart(data, prodiName, targetElementId, title, 
 
     data.forEach(d => {
         const status = d.Status;
-        if (specificStatuses.includes(status)) { // Hanya hitung status yang relevan untuk prodi ini
+        if (specificStatuses.includes(status)) { // Only count statuses relevant to this program study
             statusCounts[status]++;
         }
     });
 
-    // Mapping untuk label tampilan dan warna kustom
+    // Mapping for display labels and custom colors
     const customStatusMapping = {
-        "Belum Proposal": { label: "Belum Proposal", color: '#e74c3c' }, // Merah
-        "Sudah Proposal": { label: "Sudah Proposal", color: '#2ecc71' },   // Hijau
-        "Seminar Hasil": { label: "Sudah Semhas", color: '#3498db' },     // Biru
-        "Pendadaran": { label: "Pendadaran", color: '#f39c12' },         // Oranye
-        "Sudah Yudisium": { label: "Yudisium", color: '#9b59b6' },        // Ungu
-        // Status untuk Komputerisasi Akuntansi
-        "Belum Ujian Komprehensif": { label: "Belum Kompre", color: '#e74c3c' }, // Merah
-        "Sudah Ujian Komprehensif": { label: "Sudah Kompre", color: '#2ecc71' } // Hijau
+        "Belum Proposal": { label: "Belum Proposal", color: '#e74c3c' }, // Red
+        "Sudah Proposal": { label: "Sudah Proposal", color: '#2ecc71' },   // Green
+        "Seminar Hasil": { label: "Sudah Semhas", color: '#3498db' },     // Blue
+        "Pendadaran": { label: "Pendadaran", color: '#f39c12' },         // Orange
+        "Sudah Yudisium": { label: "Yudisium", color: '#9b59b6' },        // Purple
+        // Status for Accounting Computerization
+        "Belum Ujian Komprehensif": { label: "Belum Kompre", color: '#e74c3c' }, // Red
+        "Sudah Ujian Komprehensif": { label: "Sudah Kompre", color: '#2ecc71' } // Green
     };
 
-    // Urutan label yang akan ditampilkan di pie chart dan warna yang sesuai
+    // Order of labels to display in the pie chart and corresponding colors
     const labels = specificStatuses.map(status => customStatusMapping[status] ? customStatusMapping[status].label : status);
     const values = specificStatuses.map(status => statusCounts[status]);
-    const colors = specificStatuses.map(status => customStatusMapping[status] ? customStatusMapping[status].color : '#7f8c8d'); // Default abu-abu
+    const colors = specificStatuses.map(status => customStatusMapping[status] ? customStatusMapping[status].color : '#7f8c8d'); // Default gray
 
 
     const dataPlotly = [{
-        labels: labels, // Label untuk irisan pie
-        values: values, // Nilai untuk irisan pie
+        labels: labels, // Labels for pie slices
+        values: values, // Values for pie slices
         type: 'pie',
-        hoverinfo: 'label+percent+value', // Tampilkan label, persentase, dan nilai pada hover
-        textinfo: 'percent', // Tampilkan persentase di dalam irisan
-        insidetextorientation: 'radial', // Orientasi teks persentase
+        hoverinfo: 'label+percent+value', // Display label, percentage, and value on hover
+        textinfo: 'percent', // Display percentage inside slices
+        insidetextorientation: 'radial', // Orientation of percentage text
         marker: {
-            colors: colors // Gunakan array warna yang sudah ditentukan
+            colors: colors // Use the determined color array
         },
-        automargin: true // Agar label dan legend tidak terpotong
+        automargin: true // Prevents labels and legend from being cut off
     }];
 
     const layout = {
         title: title,
-        height: 400, // Tinggi yang cukup untuk pie chart
-        margin: { t: 40, b: 20, l: 20, r: 20 }, // Sesuaikan margin
+        height: 400, // Sufficient height for pie chart
+        margin: { t: 40, b: 20, l: 20, r: 20 }, // Adjust margins
         font: {
             family: 'Inter, sans-serif',
             size: 12,
             color: '#333'
         },
         legend: {
-            orientation: "h", // Legenda horizontal
+            orientation: "h", // Horizontal legend
             x: 0,
-            y: -0.15, // Posisikan legenda di bawah grafik
+            y: -0.15, // Position legend below the chart
             traceorder: 'normal',
             font: {
                 size: 10
