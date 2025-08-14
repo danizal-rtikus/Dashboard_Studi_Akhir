@@ -7,12 +7,40 @@ const appsScriptUrl = 'https://script.google.com/macros/s/AKfycbwLjQRxoemkHfjtcJ
 let originalData = []; // Global variable to store raw data from the API
 let uniqueDosenNames = []; // Stores a list of unique faculty names
 let dosenStats = {}; // Stores detailed statistics for each faculty member
-let prodiStatsData = {}; // NEW: Stores detailed statistics per program study
+let prodiStatsData = {}; // Stores detailed statistics per program study
 let currentPage = 1;
 const rowsPerPage = 10;
 const fullTableRowsPerPage = 15;
 
 let currentDosenFilter = null; // Stores the currently filtered faculty name for the supervised student page
+
+// NEW: Define Theme Colors for Chart.js
+const CHART_COLORS = {
+    // Colors from the --color-accent variables, adjusted for Chart.js usage
+    primary: '#3D405B',        // Blue (main text, highlight)
+    secondary: '#81B29A',      // Green (success-like)
+    tertiary: '#F2CC8F',       // Gold (warning-like)
+    quaternary: '#E07A5F',     // Terracotta (error-like, or distinct)
+    gray: '#A9A9A9',           // Grey (neutral)
+    lightBlue: '#eaf6ff',      // Lighter blue for backgrounds/hover
+    lightGreen: '#e6f7f2',     // Lighter green
+    lightRed: '#fcebeb',       // Lighter red
+    lightOrange: '#fcf1eb'     // Lighter orange
+
+    // You can add more specific colors here if needed, or modify existing ones
+    // For example, for the requested colors:
+    // red: '#FF0000',
+    // orange: '#FFA500',
+    // purple: '#800080',
+    // green: '#008000'
+};
+
+// --- Chart.js instances (to allow destroying and re-rendering) ---
+let programStudiChartInstance = null;
+let progressStatusChartSIInstance = null;
+let progressStatusChartTIInstance = null;
+let progressStatusChartTMJInstance = null;
+let progressStatusChartKAInstance = null;
 
 /**
  * Displays a global message at the top of the page.
@@ -114,11 +142,11 @@ function showPage(pageId) {
         }
     }
 
-    // NEW: Reset program study dropdown on program study statistics page when moving from that page
+    // Reset program study dropdown on program study statistics page when moving from that page
     if (pageId !== 'prodiStatsPage') {
         const prodiSelector = document.getElementById('prodiSelectorForStats');
         if (prodiSelector) {
-            prodiSelector.value = 'all'; // Reset to "Select Program Study"
+            prodiSelector.value = 'all'; // Reset to "Pilih Program Studi"
             // Clear cards and display initial message
             const cardsContainer = document.getElementById('prodiSpecificStatsCards');
             if (cardsContainer) {
@@ -127,7 +155,6 @@ function showPage(pageId) {
             }
         }
     }
-
 
     currentPage = 1; // Reset pagination page every time page changes
 }
@@ -144,14 +171,11 @@ document.getElementById('menuDosenPembimbing').addEventListener('click', functio
     showPage('dosenPembimbingPage');
     updateDashboard(); // Load faculty list when page opens
 });
-// START: Event listener for new Program Study Statistics menu
+// Event listener for new Program Study Statistics menu
 document.getElementById('menuProdiStats').addEventListener('click', function() {
     showPage('prodiStatsPage');
-    // Do not directly call updateDashboard, let the dropdown trigger card rendering
-    // Just ensure program study dropdown is populated and initial message is displayed
     populateProdiSelectorForStats();
 });
-// END: Event listener for new Program Study Statistics menu
 document.getElementById('menuAnalytics').addEventListener('click', function() {
     showPage('analyticsPage');
     updateDashboard(); // Ensure charts are re-rendered
@@ -206,7 +230,7 @@ async function loadDataFromAppsScript() {
             // Extract unique faculty names and calculate faculty statistics
             const dosenSet = new Set();
             const tempDosenStats = {};
-            const tempProdiStatsData = {}; // NEW: Object to store statistics per program study
+            const tempProdiStatsData = {}; // Object to store statistics per program study
 
             const allPossibleStatuses = [ // Complete list of statuses for initial calculation
                 "Belum Proposal", "Sudah Proposal", "Seminar Hasil", "Pendadaran",
@@ -241,7 +265,7 @@ async function loadDataFromAppsScript() {
                 if (p1) dosenSet.add(p1);
                 if (p2) dosenSet.add(p2);
 
-                // NEW: Calculate Program Study Statistics
+                // Calculate Program Study Statistics
                 if (!tempProdiStatsData[prodi]) {
                     tempProdiStatsData[prodi] = { total: 0 };
                     allPossibleStatuses.forEach(s => tempProdiStatsData[prodi][s] = 0);
@@ -257,12 +281,12 @@ async function loadDataFromAppsScript() {
 
             uniqueDosenNames = Array.from(dosenSet).sort();
             dosenStats = tempDosenStats; // Store complete faculty statistics
-            prodiStatsData = tempProdiStatsData; // NEW: Store complete program study statistics
+            prodiStatsData = tempProdiStatsData; // Store complete program study statistics
 
             populateProdiFilter(originalData);
             populateStatusFilter(originalData);
             populateStatusFilterBimbingan(originalData);
-            populateProdiSelectorForStats(); // NEW: Populate dropdown on Program Study Statistics page
+            populateProdiSelectorForStats(); // Populate dropdown on Program Study Statistics page
             updateDashboard(); // Update the entire dashboard with the newly loaded data
             clearGlobalMessage(); // Data loaded successfully, clear loading message
         } else {
@@ -301,7 +325,7 @@ function populateProdiFilter(data) {
 }
 
 /**
- * NEW: Populates the program study dropdown for the Program Study Statistics page.
+ * Populates the program study dropdown for the Program Study Statistics page.
  */
 function populateProdiSelectorForStats() {
     const prodiSelector = document.getElementById('prodiSelectorForStats');
@@ -309,7 +333,7 @@ function populateProdiSelectorForStats() {
 
     // Clear old options except "Select Program Study"
     prodiSelector.innerHTML = '<option value="all">Pilih Program Studi</option>';
-    
+
     // Get unique program study list from calculated data (prodiStatsData)
     const uniqueProdi = Object.keys(prodiStatsData).sort();
 
@@ -432,21 +456,32 @@ function renderDosenStatsCards(dosenName) {
     const statOrder = [
         { label: "Total Dibimbing", key: "total", icon: "fas fa-users" },
         { label: "Belum Proposal", key: "Belum Proposal", icon: "fas fa-times-circle" },
-        { label: "Belum Ujian Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-times-circle" },
-        { label: "Sudah Proposal", key: "Sudah Proposal", icon: "fas fa-check-circle" },
+        { label: "Belum Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-times-circle" },
+        { label: "Proposal", key: "Sudah Proposal", icon: "fas fa-check-circle" },
         { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-check-circle" },
         { label: "Pendadaran", key: "Pendadaran", icon: "fas fa-check-circle" },
-        { label: "Sudah Ujian Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-check-circle" },
-        { label: "Sudah Yudisium", key: "Sudah Yudisium", icon: "fas fa-graduation-cap" }
+        { label: "Sudah Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-check-circle" },
+        { label: "Yudisium", key: "Sudah Yudisium", icon: "fas fa-graduation-cap" }
     ];
+
+    const cardColors = { // Mapping for specific card background colors
+        "total": CHART_COLORS.lightBlue,
+        "Belum Proposal": CHART_COLORS.lightRed,
+        "Belum Ujian Komprehensif": CHART_COLORS.lightRed,
+        "Sudah Proposal": CHART_COLORS.lightGreen,
+        "Seminar Hasil": CHART_COLORS.lightOrange,
+        "Pendadaran": CHART_COLORS.lightBlue,
+        "Sudah Ujian Komprehensif": CHART_COLORS.lightGreen,
+        "Sudah Yudisium": CHART_COLORS.lightGreen // Re-use lightGreen or define a new one if needed
+    };
         
     statOrder.forEach(stat => {
         const value = stats[stat.key] || 0;
         const percentage = totalBimbingan > 0 ? ((value / totalBimbingan) * 100).toFixed(1) : 0;
-        const cardClass = stat.key.replace(/\s/g, ''); // Remove spaces for CSS class
+        const cardBgColor = cardColors[stat.key] || '#f8f9fa'; // Default fallback
 
         const cardHtml = `
-            <div class="dosen-summary-card ${cardClass}">
+            <div class="dosen-summary-card" style="background-color: ${cardBgColor};">
                 <div class="label"><i class="${stat.icon}"></i> ${stat.label}</div>
                 <div class="value">${value}</div>
                 <div class="percentage">${percentage}%</div>
@@ -458,7 +493,7 @@ function renderDosenStatsCards(dosenName) {
 
 
 /**
- * NEW: Renders specific statistics cards for the selected program study.
+ * Renders specific statistics cards for the selected program study.
  * @param {string} prodiName - Name of the program study whose statistics will be displayed.
  */
 function renderProdiSpecificStatsCards(prodiName) {
@@ -471,25 +506,22 @@ function renderProdiSpecificStatsCards(prodiName) {
 
     const totalMahasiswaProdi = stats.total || 0;
 
-    // Define order and labels of cards according to program study
     let statOrder = [];
-    // Common icon for these cards
-    const commonIcon = "fas fa-users";
     // Define common card background colors
     const commonCardColors = {
-        "total": "#eaf6ff", // Light blue
-        "Belum Proposal": "#f8d7da", // Light red
-        "Sudah Proposal": "#d1ecf1", // Info (light cyan)
-        "Seminar Hasil": "#d1ecf1",
-        "Pendadaran": "#d1ecf1",
-        "Belum Ujian Komprehensif": "#f8d7da",
-        "Sudah Ujian Komprehensif": "#d1ecf1",
-        "Sudah Yudisium": "#d4edda" // Success (light green)
+        "total": CHART_COLORS.lightBlue,
+        "Belum Proposal": CHART_COLORS.lightRed,
+        "Sudah Proposal": CHART_COLORS.lightGreen,
+        "Seminar Hasil": CHART_COLORS.lightOrange,
+        "Pendadaran": CHART_COLORS.lightBlue,
+        "Belum Ujian Komprehensif": CHART_COLORS.lightRed,
+        "Sudah Ujian Komprehensif": CHART_COLORS.lightGreen,
+        "Sudah Yudisium": CHART_COLORS.lightGreen
     };
 
     if (['Sistem Informasi', 'Teknik Informatika', 'Teknik Multimedia dan Jaringan'].includes(prodiName)) {
         statOrder = [
-            { label: `Jumlah Mahasiswa Skripsi`, key: "total", icon: commonIcon },
+            { label: `Jumlah Skripsi`, key: "total", icon: "fas fa-users" },
             { label: "Belum Proposal", key: "Belum Proposal", icon: "fas fa-times-circle" },
             { label: "Proposal", key: "Sudah Proposal", icon: "fas fa-check-circle" },
             { label: "Seminar Hasil", key: "Seminar Hasil", icon: "fas fa-check-circle" },
@@ -498,9 +530,9 @@ function renderProdiSpecificStatsCards(prodiName) {
         ];
     } else if (prodiName === 'Komputerisasi Akuntansi') {
         statOrder = [
-            { label: `Jumlah Mahasiswa Tugas Akhir`, key: "total", icon: commonIcon },
+            { label: `Jumlah Mahasiswa Tugas Akhir`, key: "total", icon: "fas fa-users" },
             { label: "Belum Komprehensif", key: "Belum Ujian Komprehensif", icon: "fas fa-times-circle" },
-            { label: "Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-check-circle" },
+            { label: "Sudah Komprehensif", key: "Sudah Ujian Komprehensif", icon: "fas fa-check-circle" },
             { label: "Yudisium", key: "Sudah Yudisium", icon: "fas fa-graduation-cap" }
         ];
     } else {
@@ -511,13 +543,11 @@ function renderProdiSpecificStatsCards(prodiName) {
     statOrder.forEach(stat => {
         const value = stats[stat.key] || 0;
         const percentage = totalMahasiswaProdi > 0 ? ((value / totalMahasiswaProdi) * 100).toFixed(1) : 0;
-        const cardClass = stat.key.replace(/\s/g, ''); // Remove spaces for CSS class
 
-        // Use custom color from commonCardColors if available, default to #f8f9fa
         const backgroundColor = commonCardColors[stat.key] || '#f8f9fa';
 
         const cardHtml = `
-            <div class="dosen-summary-card ${cardClass}" style="background-color: ${backgroundColor};">
+            <div class="dosen-summary-card" style="background-color: ${backgroundColor};">
                 <div class="label"><i class="${stat.icon}"></i> ${stat.label}</div>
                 <div class="value">${value}</div>
                 <div class="percentage">${percentage}%</div>
@@ -540,7 +570,7 @@ function updateStats(data) {
     const prodiTMJSet = data.filter(d => d["Program Studi"] === "Teknik Multimedia dan Jaringan").length;
     const prodiKASet = data.filter(d => d["Program Studi"] === "Komputerisasi Akuntansi").length;
 
-    const totalMahasiswaSkripsiTAPercent = 100;
+    const totalMahasiswaSkripsiTAPercent = 100; // Always 100% of itself
     const prodiSIPercent = totalMahasiswaSkripsiTA > 0 ? (prodiSISet / totalMahasiswaSkripsiTA * 100).toFixed(1) : 0;
     const prodiTIPercent = totalMahasiswaSkripsiTA > 0 ? (prodiTISet / totalMahasiswaSkripsiTA * 100).toFixed(1) : 0;
     const prodiTMJPercent = totalMahasiswaSkripsiTA > 0 ? (prodiTMJSet / totalMahasiswaSkripsiTA * 100).toFixed(1) : 0;
@@ -563,30 +593,6 @@ function updateStats(data) {
     document.getElementById("jumlahProdiTIChange").innerText = `${prodiTIPercent}%`;
     document.getElementById("jumlahProdiTMJChange").innerText = `${prodiTMJPercent}%`;
     document.getElementById("jumlahProdiKAChange").innerText = `${prodiKAPercent}%`;
-    
-    // NEW: Update stats for the duplicated section in prodiStatsPage as well
-    const prodiStatsPage = document.getElementById('prodiStatsPage');
-    // Only update standard overview cards on prodiStatsPage if no specific program study is selected in the dropdown
-    const prodiSelector = document.getElementById('prodiSelectorForStats');
-    if (prodiStatsPage && prodiStatsPage.style.display === 'block' && prodiSelector && prodiSelector.value === 'all') {
-        document.getElementById("totalMahasiswaSkripsiTA_prodiStats").innerText = totalMahasiswaSkripsiTA;
-        document.getElementById("jumlahProdiSI_prodiStats").innerText = prodiSISet;
-        document.getElementById("jumlahProdiTI_prodiStats").innerText = prodiTISet;
-        document.getElementById("jumlahProdiTMJ_prodiStats").innerText = prodiTMJSet;
-        document.getElementById("jumlahProdiKA_prodiStats").innerText = prodiKASet;
-
-        updateCircularProgress('totalMahasiswaSkripsiTAProgress_prodiStats', totalMahasiswaSkripsiTAPercent);
-        updateCircularProgress('jumlahProdiSIProgress_prodiStats', prodiSIPercent);
-        updateCircularProgress('jumlahProdiTIProgress_prodiStats', prodiTIPercent);
-        updateCircularProgress('jumlahProdiTMJProgress_prodiStats', prodiTMJPercent);
-        updateCircularProgress('jumlahProdiKAProgress_prodiStats', prodiKAPercent);
-
-        document.getElementById("totalMahasiswaSkripsiTAChange_prodiStats").innerText = `${totalMahasiswaSkripsiTAPercent}%`;
-        document.getElementById("jumlahProdiSIChange_prodiStats").innerText = `${prodiSIPercent}%`;
-        document.getElementById("jumlahProdiTIChange_prodiStats").innerText = `${prodiTIPercent}%`;
-        document.getElementById("jumlahProdiTMJChange_prodiStats").innerText = `${prodiTMJPercent}%`;
-        document.getElementById("jumlahProdiKAChange_prodiStats").innerText = `${prodiKAPercent}%`;
-    }
 }
 
 
@@ -775,11 +781,11 @@ function generateProdiStatsTable(data, targetElementId) {
                     <th>Program Studi</th>
                     <th>Jumlah</th>
                     <th>Belum Proposal</th>
-                    <th>Sudah Proposal</th>
+                    <th>Proposal</th>
                     <th>Seminar Hasil</th>
                     <th>Pendadaran</th>
-                    <th>Belum Ujian Komprehensif</th>
-                    <th>Sudah Ujian Komprehensif</th>
+                    <th>Belum Komprehensif</th>
+                    <th>Sudah Komprehensif</th>
                     <th>Yudisium</th>
                 </tr>
             </thead>
@@ -817,33 +823,40 @@ function generateProdiStatsTable(data, targetElementId) {
  * @param {Array<Object>} data - Filtered student data.
  */
 function updateCharts(data) {
+    // Destroy previous Chart.js instances before re-rendering
+    if (programStudiChartInstance) programStudiChartInstance.destroy();
+    if (progressStatusChartSIInstance) progressStatusChartSIInstance.destroy();
+    if (progressStatusChartTIInstance) progressStatusChartTIInstance.destroy();
+    if (progressStatusChartTMJInstance) progressStatusChartTMJInstance.destroy();
+    if (progressStatusChartKAInstance) progressStatusChartKAInstance.destroy();
+
     // Custom color definitions for Program Study Population
     const prodiColorsMapping = {
-        "Sistem Informasi": '#3498db', // Blue
-        "Teknik Informatika": '#f39c12', // Orange
-        "Komputerisasi Akuntansi": '#2ecc71', // Green
-        "Teknik Multimedia dan Jaringan": '#9b59b6' // Purple
+        "Sistem Informasi": '#FF0000', // Merah
+        "Teknik Informatika": '#FFA500', // Oranye
+        "Komputerisasi Akuntansi": '#008000', // Hijau
+        "Teknik Multimedia dan Jaringan": '#800080' // Ungu
     };
     generatePieChart(countOccurrences(data, 'Program Studi'), 'programStudiChart', 'Grafik Mahasiswa Studi Akhir', prodiColorsMapping);
-    
-    // Progress charts per Program Study (Pie Chart)
+
+    // Progress charts per Program Study (Doughnut Chart)
     const dataSI = data.filter(d => d["Program Studi"] === "Sistem Informasi");
-    generateProdiProgressPieChart(dataSI, "Sistem Informasi", 'progressStatusChartSI', 'Program Studi - Sistem Informasi', [
+    progressStatusChartSIInstance = generateProgressDoughnutChart(dataSI, "Sistem Informasi", 'progressStatusChartSI', 'Sistem Informasi', [
         "Belum Proposal", "Sudah Proposal", "Seminar Hasil", "Pendadaran", "Sudah Yudisium"
     ]);
 
     const dataTI = data.filter(d => d["Program Studi"] === "Teknik Informatika");
-    generateProdiProgressPieChart(dataTI, "Teknik Informatika", 'progressStatusChartTI', 'Program Studi - Teknik Informatika', [
+    progressStatusChartTIInstance = generateProgressDoughnutChart(dataTI, "Teknik Informatika", 'progressStatusChartTI', 'Teknik Informatika', [
         "Belum Proposal", "Sudah Proposal", "Seminar Hasil", "Pendadaran", "Sudah Yudisium"
     ]);
 
     const dataTMJ = data.filter(d => d["Program Studi"] === "Teknik Multimedia dan Jaringan");
-    generateProdiProgressPieChart(dataTMJ, "Teknik Multimedia dan Jaringan", 'progressStatusChartTMJ', 'Program Studi - Teknik Multimedia dan Jaringan', [
+    progressStatusChartTMJInstance = generateProgressDoughnutChart(dataTMJ, "Teknik Multimedia dan Jaringan", 'progressStatusChartTMJ', 'Teknik Multimedia dan Jaringan', [
         "Belum Proposal", "Sudah Proposal", "Seminar Hasil", "Pendadaran", "Sudah Yudisium"
     ]);
 
     const dataKA = data.filter(d => d["Program Studi"] === "Komputerisasi Akuntansi");
-    generateProdiProgressPieChart(dataKA, "Komputerisasi Akuntansi", 'progressStatusChartKA', 'Program Studi - Komputerisasi Akuntansi', [
+    progressStatusChartKAInstance = generateProgressDoughnutChart(dataKA, "Komputerisasi Akuntansi", 'progressStatusChartKA', 'Komputerisasi Akuntansi', [
         "Belum Ujian Komprehensif", "Sudah Ujian Komprehensif", "Sudah Yudisium"
     ]);
 }
@@ -861,6 +874,184 @@ function countOccurrences(data, key) {
         return acc;
     }, {});
 }
+
+/**
+ * Generates a Doughnut Chart for Program Study Distribution or similar data.
+ * @param {Object} dataCounts - Object where keys are labels and values are counts.
+ * @param {string} targetElementId - ID of the canvas element.
+ * @param {string} title - Chart title.
+ * @param {Object} [colorMapping] - Optional: Object mapping label names to color codes.
+ * @returns {Chart} - The Chart.js instance.
+ */
+function generatePieChart(dataCounts, targetElementId, title, colorMapping = {}) {
+    const labels = Object.keys(dataCounts);
+    const values = Object.values(dataCounts);
+
+    const colors = labels.map(label => {
+        if (colorMapping[label]) {
+            return colorMapping[label];
+        }
+        // Fallback colors if not in mapping, using CHART_COLORS
+        switch (label) {
+            case "Sistem Informasi": return CHART_COLORS.primary;
+            case "Teknik Informatika": return CHART_COLORS.tertiary;
+            case "Komputerisasi Akuntansi": return CHART_COLORS.secondary;
+            case "Teknik Multimedia dan Jaringan": return CHART_COLORS.quaternary;
+            default: return CHART_COLORS.gray;
+        }
+    });
+
+    const ctx = document.getElementById(targetElementId).getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (Chart.getChart(ctx)) {
+        Chart.getChart(ctx).destroy();
+    }
+
+    const newChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderColor: '#FFFFFF', // White border between slices
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: title,
+                    font: { size: 18, weight: 'bold', family: 'Inter' },
+                    color: CHART_COLORS.primary
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 12, family: 'Inter' },
+                        color: CHART_COLORS.primary
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += context.parsed + ' (' + context.dataset.data[context.dataIndex] + ' Mahasiswa)';
+                            }
+                            return label;
+                        }
+                    },
+                    bodyFont: { family: 'Inter' },
+                    titleFont: { family: 'Inter' }
+                }
+            }
+        }
+    });
+    return newChart;
+}
+
+
+/**
+ * Generates a Doughnut chart for student progress per stage for a specific program study.
+ * @param {Array<Object>} data - Student data filtered for a specific program study.
+ * @param {string} prodiName - Program study name.
+ * @param {string} targetElementId - ID of the canvas element.
+ * @param {string} title - Chart title.
+ * @param {Array<string>} specificStatuses - Array of specific statuses for this program study (original status names from data).
+ * @returns {Chart} - The Chart.js instance.
+ */
+function generateProgressDoughnutChart(data, prodiName, targetElementId, title, specificStatuses) {
+    const statusCounts = {};
+    specificStatuses.forEach(status => statusCounts[status] = 0);
+
+    data.forEach(d => {
+        const status = d.Status;
+        if (specificStatuses.includes(status)) {
+            statusCounts[status]++;
+        }
+    });
+
+    // Mapping for display labels and custom colors
+    const customStatusMapping = {
+        "Belum Proposal": { label: "Belum Proposal", color: CHART_COLORS.quaternary }, // Terracotta for "Belum"
+        "Sudah Proposal": { label: "Proposal", color: CHART_COLORS.secondary },   // Green for "Sudah"
+        "Seminar Hasil": { label: "Seminar Hasil", color: CHART_COLORS.tertiary },     // Gold
+        "Pendadaran": { label: "Pendadaran", color: CHART_COLORS.primary },         // Blue
+        "Sudah Yudisium": { label: "Yudisium", color: CHART_COLORS.secondary }, // Green (again)
+        "Belum Ujian Komprehensif": { label: "Belum Komprehensif", color: CHART_COLORS.quaternary },
+        "Sudah Ujian Komprehensif": { label: "Sudah Komprehensif", color: CHART_COLORS.secondary }
+    };
+
+    const labels = specificStatuses.map(status => customStatusMapping[status] ? customStatusMapping[status].label : status);
+    const values = specificStatuses.map(status => statusCounts[status]);
+    const colors = specificStatuses.map(status => customStatusMapping[status] ? customStatusMapping[status].color : CHART_COLORS.gray);
+
+
+    const ctx = document.getElementById(targetElementId).getContext('2d');
+
+    // Destroy existing chart if it exists
+    if (Chart.getChart(ctx)) {
+        Chart.getChart(ctx).destroy();
+    }
+
+    const newChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderColor: '#FFFFFF',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Progress ${title}`,
+                    font: { size: 18, weight: 'bold', family: 'Inter' },
+                    color: CHART_COLORS.primary
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 12, family: 'Inter' },
+                        color: CHART_COLORS.primary
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += context.parsed + ' Mahasiswa';
+                            }
+                            return label;
+                        }
+                    },
+                    bodyFont: { family: 'Inter' },
+                    titleFont: { family: 'Inter' }
+                }
+            }
+        }
+    });
+    return newChart;
+}
+
 
 /**
  * Gets filtered student data based on the active page.
@@ -937,8 +1128,7 @@ function updateDashboard() {
     } else if (analyticsPage.style.display === 'block') {
         updateCharts(filteredDataForContext);
     } else if (prodiStatsPage.style.display === 'block') {
-        // updateStats(filteredDataForContext); // Cards on this page are filled by renderProdiSpecificStatsCards
-        generateProdiStatsTable(filteredDataForContext, 'recentMahasiswaTable_prodiStats'); // Update table in the duplicated section
+        generateProdiStatsTable(filteredDataForContext, 'recentMahasiswaTable_prodiStats');
         const prodiSelector = document.getElementById('prodiSelectorForStats');
         if (prodiSelector && prodiSelector.value !== 'all') {
             renderProdiSpecificStatsCards(prodiSelector.value);
@@ -975,164 +1165,5 @@ window.onload = function() {
         document.body.classList.toggle('sidebar-collapsed');
     });
 
-    // Event listener for showAllMahasiswa_prodiStats
-    const showAllMahasiswaProdiStats = document.getElementById('showAllMahasiswa_prodiStats');
-    if (showAllMahasiswaProdiStats) {
-        showAllMahasiswaProdiStats.addEventListener('click', function(e) {
-            e.preventDefault();
-            showPage('dataMahasiswaPage'); // Redirect to main Student Data page
-            // Optional: set program study filter if you want to display all students from a specific program study when clicked from program study statistics
-            // const selectedProdiFromStats = document.getElementById('prodiSelectorForStats').value;
-            // if (selectedProdiFromStats !== 'all') {
-            //     document.getElementById('prodiFilter').value = selectedProdiFromStats;
-            // }
-            // currentPage = 1; updateDashboard();
-        });
-    }
-
     showPage('dashboardPage');
 };
-
-// --- Plotly Chart Functions ---
-
-/**
- * Generates a pie chart using Plotly.
- * This function is used for the Program Study Population chart.
- * @param {Object} dataCounts - Object containing category counts (label: count).
- * @param {string} targetElementId - ID of the div element to place the chart in.
- * @param {string} title - Chart title.
- * @param {Object} [colorMapping] - Optional: Object mapping label names to color codes.
- */
-function generatePieChart(dataCounts, targetElementId, title, colorMapping = {}) {
-    const labels = Object.keys(dataCounts);
-    const values = Object.values(dataCounts);
-
-    // Determine colors based on mapping or default Plotly colors
-    const colors = labels.map(label => {
-        if (colorMapping[label]) {
-            return colorMapping[label];
-        }
-        // Default colors if not in mapping
-        switch (label) {
-            case "Sistem Informasi": return '#3498db'; // Blue (fallback)
-            case "Teknik Informatika": return '#f39c12'; // Orange (fallback)
-            case "Komputerisasi Akuntansi": return '#2ecc71'; // Green (fallback)
-            case "Teknik Multimedia dan Jaringan": return '#9b59b6'; // Purple (fallback)
-            default: return '#7f8c8d'; // Default gray
-        }
-    });
-
-    const data = [{
-        labels: labels,
-        values: values,
-        type: 'pie',
-        hoverinfo: 'label+percent',
-        textinfo: 'percent',
-        insidetextorientation: 'radial',
-        marker: {
-            colors: colors // Use the determined color array
-        },
-        automargin: true
-    }];
-
-    const layout = {
-        title: title,
-        height: 400,
-        margin: { t: 40, b: 20, l: 20, r: 20 },
-        font: {
-            family: 'Inter, sans-serif',
-            size: 12,
-            color: '#333'
-        },
-        legend: {
-            orientation: "h",
-            x: 0,
-            y: -0.15,
-            traceorder: 'normal',
-            font: {
-                size: 10
-            }
-        },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)'
-    };
-
-    Plotly.newPlot(targetElementId, data, layout, {responsive: true, displayModeBar: false});
-}
-
-
-/**
- * Generates a pie chart for student progress per stage, specifically for each program study.
- * This function replaces generateProdiProgressChart (bar chart).
- * @param {Array<Object>} data - Student data filtered for a specific program study.
- * @param {string} prodiName - Program study name.
- * @param {string} targetElementId - ID of the div element to place the chart in.
- * @param {string} title - Chart title.
- * @param {Array<string>} specificStatuses - Array of specific statuses for this program study (original status names from data).
- */
-function generateProdiProgressPieChart(data, prodiName, targetElementId, title, specificStatuses) {
-    const statusCounts = {};
-    specificStatuses.forEach(status => statusCounts[status] = 0);
-
-    data.forEach(d => {
-        const status = d.Status;
-        if (specificStatuses.includes(status)) { // Only count statuses relevant to this program study
-            statusCounts[status]++;
-        }
-    });
-
-    // Mapping for display labels and custom colors
-    const customStatusMapping = {
-        "Belum Proposal": { label: "Belum Proposal", color: '#e74c3c' }, // Red
-        "Sudah Proposal": { label: "Sudah Proposal", color: '#2ecc71' },   // Green
-        "Seminar Hasil": { label: "Sudah Semhas", color: '#3498db' },     // Blue
-        "Pendadaran": { label: "Pendadaran", color: '#f39c12' },         // Orange
-        "Sudah Yudisium": { label: "Yudisium", color: '#9b59b6' },        // Purple
-        // Status for Accounting Computerization
-        "Belum Ujian Komprehensif": { label: "Belum Kompre", color: '#e74c3c' }, // Red
-        "Sudah Ujian Komprehensif": { label: "Sudah Kompre", color: '#2ecc71' } // Green
-    };
-
-    // Order of labels to display in the pie chart and corresponding colors
-    const labels = specificStatuses.map(status => customStatusMapping[status] ? customStatusMapping[status].label : status);
-    const values = specificStatuses.map(status => statusCounts[status]);
-    const colors = specificStatuses.map(status => customStatusMapping[status] ? customStatusMapping[status].color : '#7f8c8d'); // Default gray
-
-
-    const dataPlotly = [{
-        labels: labels, // Labels for pie slices
-        values: values, // Values for pie slices
-        type: 'pie',
-        hoverinfo: 'label+percent+value', // Display label, percentage, and value on hover
-        textinfo: 'percent', // Display percentage inside slices
-        insidetextorientation: 'radial', // Orientation of percentage text
-        marker: {
-            colors: colors // Use the determined color array
-        },
-        automargin: true // Prevents labels and legend from being cut off
-    }];
-
-    const layout = {
-        title: title,
-        height: 400, // Sufficient height for pie chart
-        margin: { t: 40, b: 20, l: 20, r: 20 }, // Adjust margins
-        font: {
-            family: 'Inter, sans-serif',
-            size: 12,
-            color: '#333'
-        },
-        legend: {
-            orientation: "h", // Horizontal legend
-            x: 0,
-            y: -0.15, // Position legend below the chart
-            traceorder: 'normal',
-            font: {
-                size: 10
-            }
-        },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)'
-    };
-
-    Plotly.newPlot(targetElementId, dataPlotly, layout, {responsive: true, displayModeBar: false});
-}
