@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SYS Dashboard Monitoring Studi Akhir</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body class="sidebar-collapsed">
@@ -21,7 +24,7 @@
         <div class="nav-item" id="menuProdiStats"><i class="fas fa-chart-line"></i><span>Statistik Prodi</span></div>
         <div class="nav-item" id="menuAnalytics"><i class="fas fa-chart-pie"></i><span>Grafik</span></div>
         <div class="nav-item" id="menuReport"><i class="fas fa-file-alt"></i><span>Report</span></div>
-        <div class="nav-item" id="menuLogout" style="margin-top: auto;"><i class="'fas fa-sign-out-alt'"></i><span> </span></div>
+        
     </div>
 
     <div class="main-wrapper">
@@ -42,17 +45,14 @@
         </div>
 
         <div class="main-body">
-            <!-- Container for global messages (loading/error) -->
             <div id="globalMessageContainer" class="global-message-container"></div>
 
-            <!-- Section Dashboard -->
             <div id="dashboardPage" class="page-section">
                 <div class="overview-cards-grid">
-                    <!-- CARD 1: Total Thesis/TA Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Jumlah Mahasiswa Studi Akhir</div>
+                                <div class="overview-card-title">Jumlah Mahasiswa</div>
                                 <div class="overview-card-value" id="totalMahasiswaSkripsiTA">-</div>
                             </div>
                             <div class="circular-progress">
@@ -66,11 +66,10 @@
                         </div>
                     </div>
 
-                    <!-- CARD 2: Total SI Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Sistem Informasi</div>
+                                <div class="overview-card-title">Skripsi - SI</div>
                                 <div class="overview-card-value" id="jumlahProdiSI">-</div>
                             </div>
                             <div class="circular-progress">
@@ -80,15 +79,14 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiSIChange">0%</span></div>
-                            <div class="overview-card-time">Mahasiswa Skripsi</div>
+                            <div class="overview-card-time">Total SI</div>
                         </div>
                     </div>
 
-                    <!-- CARD 3: Total TI Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Teknik Informatika</div>
+                                <div class="overview-card-title">Skripsi - TI</div>
                                 <div class="overview-card-value" id="jumlahProdiTI">-</div>
                             </div>
                             <div class="circular-progress">
@@ -98,15 +96,14 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiTIChange">0%</span></div>
-                            <div class="overview-card-time">Mahasiswa Skripsi</div>
+                            <div class="overview-card-time">Total TI</div>
                         </div>
                     </div>
 
-                    <!-- CARD 4: Total TMJ Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Teknik Multimedia dan Jaringan</div>
+                                <div class="overview-card-title">Skripsi - TMJ</div>
                                 <div class="overview-card-value" id="jumlahProdiTMJ">-</div>
                             </div>
                             <div class="circular-progress">
@@ -116,15 +113,14 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiTMJChange">0%</span></div>
-                            <div class="overview-card-time">Mahasiswa Skripsi</div>
+                            <div class="overview-card-time">Total TMJ</div>
                         </div>
                     </div>
 
-                    <!-- CARD 5: Total KA Students -->
                     <div class="overview-card">
                         <div class="overview-card-top">
                             <div class="text-content">
-                                <div class="overview-card-title">Komputerisasi Akuntansi</div>
+                                <div class="overview-card-title">Tugas Akhir - KA</div>
                                 <div class="overview-card-value" id="jumlahProdiKA">-</div>
                             </div>
                             <div class="circular-progress">
@@ -134,7 +130,7 @@
                         </div>
                         <div class="overview-card-bottom">
                             <div class="overview-card-percentage positive"><i class="fas fa-users"></i> <span id="jumlahProdiKAChange">0%</span></div>
-                            <div class="overview-card-time">Mahasiswa Tugas Akhir</div>
+                            <div class="overview-card-time">Total KA</div>
                         </div>
                     </div>
                 </div>
@@ -145,33 +141,23 @@
                         <a href="#" class="show-all-link" id="showAllMahasiswa">Show All</a>
                     </div>
                     <div id="recentMahasiswaTable">
-                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- START: New Program Study Statistics Section -->
             <div id="prodiStatsPage" class="page-section" style="display:none;">
                 <div class="filter-bar">
                     <select id="prodiSelectorForStats">
                         <option value="all">Pilih Program Studi</option>
-                        <!-- Options will be populated by JS -->
-                    </select>
+                        </select>
                 </div>
                 <div class="section">
                     <h3>Statistik Program Studi: <span id="currentProdiStatsName">Pilih Prodi</span></h3>
                     <div class="overview-cards-grid" id="prodiSpecificStatsCards">
-                        <!-- Specific program study statistics cards will be loaded here -->
                         <p style="text-align:center; grid-column: 1 / -1; color:#777;">Silakan pilih program studi dari dropdown di atas untuk melihat statistiknya.</p>
                     </div>
                 </div>
-                <!-- Optional: If you want to display the student list table here as well -->
-                <!-- <div class="section">
-                    <h3>Daftar Mahasiswa Program Studi: <span id="selectedProdiMahasiswaList"></span></h3>
-                    <div id="prodiMahasiswaTable"></div>
-                </div> -->
             </div>
-            <!-- END: New Program Study Statistics Section -->
-
             <div id="dataMahasiswaPage" class="page-section" style="display:none;">
                 <div class="filter-bar">
                     <input type="text" id="searchBox" placeholder="Cari Nama/NIM...">
@@ -193,14 +179,14 @@
                 <div class="section">
                     <h3>Statistik Dosen Pembimbing</h3>
                     <div id="dosenListTable">
-                        </div>
+                    </div>
                 </div>
             </div>
             <div id="mahasiswaBimbinganDetailPage" class="page-section" style="display:none;">
                 <div class="section">
                     <h3>Statistik Bimbingan Dosen: <span id="currentDosenName"></span></h3>
                     <div class="overview-cards-grid" id="dosenStatsCards">
-                        </div>
+                    </div>
                 </div>
                 <div class="filter-bar" style="margin-top: 25px;">
                     <input type="text" id="searchBoxBimbingan" placeholder="Cari Nama/NIM Mahasiswa Bimbingan...">
@@ -211,7 +197,7 @@
                 <div class="section">
                     <h3>Daftar Mahasiswa Bimbingan</h3>
                     <div id="mahasiswaBimbinganTable">
-                        </div>
+                    </div>
                     <button id="backToDosenListFromBimbinganBtn" class="pagination-button" style="margin-top: 20px;">
                         <i class="fas fa-arrow-left"></i> Kembali ke Daftar Dosen
                     </button>
@@ -219,24 +205,34 @@
             </div>
             <div id="analyticsPage" class="page-section" style="display:none;">
                 <div class="section">
-                    <h3>Grafik Mahasiswa Studi Akhir</h3>
-                    <div id="programStudiChart"></div>
+                    <h3 class="chart-title">Grafik Populasi Studi Akhir</h3>
+                    <div class="chart-container">
+                        <canvas id="programStudiChart"></canvas>
+                    </div>
                 </div>
                 <div class="section">
-                    <h3>Grafik Studi Akhir - Sistem Informasi</h3>
-                    <div id="progressStatusChartSI"></div>
+                    <h3 class="chart-title">Grafik Prodi Sistem Informasi</h3>
+                    <div class="chart-container">
+                        <canvas id="progressStatusChartSI"></canvas>
+                    </div>
                 </div>
                 <div class="section">
-                    <h3>Grafik Studi Akhir - Teknik Informatika</h3>
-                    <div id="progressStatusChartTI"></div>
+                    <h3 class="chart-title">Grafik Prodi Teknik Informatika</h3>
+                    <div class="chart-container">
+                        <canvas id="progressStatusChartTI"></canvas>
+                    </div>
                 </div>
                 <div class="section">
-                    <h3>Grafik Studi Akhir - Teknik Multimedia dan Jaringan</h3>
-                    <div id="progressStatusChartTMJ"></div>
+                    <h3 class="chart-title">Grafik Prodi Teknik Multimedia dan Jaringan</h3>
+                    <div class="chart-container">
+                        <canvas id="progressStatusChartTMJ"></canvas>
+                    </div>
                 </div>
                 <div class="section">
-                    <h3>Grafik Studi Akhir - Komputerisasi Akuntansi</h3>
-                    <div id="progressStatusChartKA"></div>
+                    <h3 class="chart-title">Grafik Prodi Komputerisasi Akuntansi</h3>
+                    <div class="chart-container">
+                        <canvas id="progressStatusChartKA"></canvas>
+                    </div>
                 </div>
             </div>
 
